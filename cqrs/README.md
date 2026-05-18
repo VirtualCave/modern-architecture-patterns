@@ -89,6 +89,86 @@ flowchart TD
 mvn spring-boot:run
 ```
 
+## Diagrama de Secuencia: Command (Crear Producto)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CommandController
+    participant CommandBus
+    participant CommandHandler
+    participant WriteModel
+    participant WriteRepo
+    participant DB
+
+    Client->>CommandController: POST /api/commands/products
+    CommandController->>CommandController: toCommand(request)
+    CommandController->>CommandBus: dispatch(CreateProductCommand)
+    CommandBus->>CommandHandler: handle(command)
+    CommandHandler->>WriteModel: Product.create(name, price, stock)
+    WriteModel->>WriteModel: validate data
+    WriteModel-->>CommandHandler: Product
+    CommandHandler->>WriteRepo: save(product)
+    WriteRepo->>WriteRepo: toEntity(product)
+    WriteRepo->>DB: INSERT
+    DB-->>WriteRepo: saved
+    WriteRepo-->>CommandHandler: success
+    CommandHandler-->>CommandBus: Void
+    CommandBus-->>CommandController: Void
+    CommandController-->>Client: 201 Created
+
+    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
+    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
+    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
+    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
+    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+
+    class Client,CommandController entry;
+    class CommandBus bus;
+    class CommandHandler app;
+    class WriteModel domain;
+    class WriteRepo,DB infra;
+```
+
+## Diagrama de Secuencia: Query (Listar Productos)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant QueryController
+    participant QueryBus
+    participant QueryHandler
+    participant ReadModel
+    participant ReadRepo
+    participant DB
+
+    Client->>QueryController: GET /api/queries/products
+    QueryController->>QueryController: toQuery(request)
+    QueryController->>QueryBus: dispatch(GetAllProductsQuery)
+    QueryBus->>QueryHandler: handle(query)
+    QueryHandler->>ReadRepo: findAll()
+    ReadRepo->>DB: SELECT
+    DB-->>ReadRepo: List<ProductView>
+    ReadRepo-->>QueryHandler: List<ProductView>
+    QueryHandler->>ReadModel: toDto(views)
+    ReadModel-->>QueryHandler: List<ProductDto>
+    QueryHandler-->>QueryBus: List<ProductDto>
+    QueryBus-->>QueryController: List<ProductDto>
+    QueryController-->>Client: 200 OK + products
+
+    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
+    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
+    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
+    classDef read fill:#E0F7FA,stroke:#00838F,stroke-width:1px,color:#006064;
+    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+
+    class Client,QueryController entry;
+    class QueryBus bus;
+    class QueryHandler app;
+    class ReadModel read;
+    class ReadRepo,DB infra;
+```
+
 ## Tests
 
 ```bash

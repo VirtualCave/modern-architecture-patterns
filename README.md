@@ -434,6 +434,161 @@ curl http://localhost:8084/api/queries/subscriptions
 - La **infraestructura** puede cambiar con poco impacto en el núcleo.
 - Cada parte del sistema tiene una razón clara de existir.
 
+## Diagramas de Arquitectura
+
+### Arquitectura Hexagonal - Componentes
+
+```mermaid
+graph TB
+    subgraph "Entry Layer"
+        REST[REST Controller]
+        CLI[CLI Adapter]
+        MQ[Message Queue Adapter]
+    end
+    
+    subgraph "Application Layer"
+        InputPorts[Input Ports<br/>Use Cases]
+        AppServices[Application Services]
+    end
+    
+    subgraph "Domain Layer"
+        Aggregates[Aggregates<br/>Order, Customer]
+        VOs[Value Objects<br/>Money, OrderId]
+        OutputPorts[Output Ports<br/>Repositories, Event Publishers]
+    end
+    
+    subgraph "Infrastructure Layer"
+        JPA[JPA Adapter]
+        EventPublisher[Event Publisher Adapter]
+        Log[Logging Adapter]
+    end
+    
+    REST --> InputPorts
+    CLI --> InputPorts
+    MQ --> InputPorts
+    InputPorts --> AppServices
+    AppServices --> Aggregates
+    AppServices --> OutputPorts
+    Aggregates --> OutputPorts
+    OutputPorts --> JPA
+    OutputPorts --> EventPublisher
+    OutputPorts --> Log
+    
+    classDef entry fill:#E3F2FD,stroke:#1565C0
+    classDef app fill:#E8F5E9,stroke:#2E7D32
+    classDef domain fill:#FFF8E1,stroke:#EF6C00
+    classDef infra fill:#FBE9E7,stroke:#D84315
+    
+    class REST,CLI,MQ entry
+    class InputPorts,AppServices app
+    class Aggregates,VOs,OutputPorts domain
+    class JPA,EventPublisher,Log infra
+```
+
+### Arquitectura CQRS - Componentes
+
+```mermaid
+graph TB
+    subgraph "Command Side"
+        CController[Command Controller]
+        CBus[Command Bus]
+        CHandlers[Command Handlers]
+        WModel[Write Model<br/>Product]
+        WRepo[Write Repository]
+    end
+    
+    subgraph "Query Side"
+        QController[Query Controller]
+        QBus[Query Bus]
+        QHandlers[Query Handlers]
+        RModel[Read Model<br/>ProductView]
+        RRepo[Read Repository]
+    end
+    
+    subgraph "Database"
+        WDB[Write DB<br/>Products Table]
+        RDB[Read DB<br/>ProductViews Table]
+    end
+    
+    CController --> CBus
+    CBus --> CHandlers
+    CHandlers --> WModel
+    CHandlers --> WRepo
+    WRepo --> WDB
+    
+    QController --> QBus
+    QBus --> QHandlers
+    QHandlers --> RModel
+    QHandlers --> RRepo
+    RRepo --> RDB
+    
+    classDef command fill:#FFEBEE,stroke:#C62828
+    classDef query fill:#E3F2FD,stroke:#1565C0
+    classDef db fill:#ECEFF1,stroke:#455A64
+    
+    class CController,CBus,CHandlers,WModel,WRepo command
+    class QController,QBus,QHandlers,RModel,RRepo query
+    class WDB,RDB db
+```
+
+### Comparativa de Arquitecturas
+
+| Aspecto | Hexagonal | CQRS | DDD | Hybrid |
+|---------|-----------|------|-----|--------|
+| **Enfoque principal** | Aislamiento del dominio | Separación lectura/escritura | Lenguaje del negocio | Combinación de las tres |
+| **Complejidad** | Media | Media-Alta | Alta | Muy alta |
+| **Curva de aprendizaje** | Moderada | Moderada | Alta | Muy alta |
+| **Ideal para** | Dominios con infraestructura variable | Sistemas con muchas lecturas | Dominios complejos | Sistemas serios y evolutivos |
+| **No ideal para** | CRUDs simples | CRUDs simples | Dominios simples | Prototipos |
+| **Componentes clave** | Ports, Adapters, Aggregates | Commands, Queries, Buses | Bounded Contexts, Ubiquitous Language | Todo lo anterior |
+| **Testing** | Fácil (dominio aislado) | Fácil (separado) | Fácil (dominio rico) | Fácil pero verboso |
+| **Escalabilidad** | Buena | Muy buena (lectura) | Buena | Excelente |
+
+### Diagrama de Decisión
+
+```mermaid
+flowchart TD
+    A[¿El sistema es simple?] -->|Sí| B[CRUD clásico]
+    A -->|No| C[¿La infraestructura cambiará?]
+    
+    C -->|Sí| D[Hexagonal]
+    C -->|No| E[¿Lectura y escritura son distintas?]
+    
+    E -->|Sí| F[CQRS]
+    E -->|No| G[¿El dominio es complejo?]
+    
+    G -->|Sí| H[DDD]
+    G -->|No| I[Arquitectura en capas]
+    
+    D --> J[¿También necesita CQRS?]
+    J -->|Sí| K[Hexagonal + CQRS]
+    J -->|No| L[Hexagonal solo]
+    
+    F --> M[¿También necesita DDD?]
+    M -->|Sí| N[DDD + CQRS]
+    M -->|No| O[CQRS solo]
+    
+    H --> P[¿También necesita Hexagonal?]
+    P -->|Sí| Q[Hexagonal + DDD]
+    P -->|No| R[DDD solo]
+    
+    K --> S[¿También necesita DDD?]
+    N --> S
+    Q --> S
+    S -->|Sí| T[Hybrid<br/>Hexagonal + CQRS + DDD]
+    S -->|No| U[Combinación parcial]
+    
+    classDef simple fill:#C8E6C9,stroke:#388E3C
+    classDef medium fill:#FFF9C4,stroke:#FBC02D
+    classDef complex fill:#FFCCBC,stroke:#F57C00
+    classDef hybrid fill:#E1BEE7,stroke:#7B1FA2
+    
+    class B,I simple
+    class D,F,H medium
+    class K,N,Q complex
+    class T,U hybrid
+```
+
 ### Diagrama visual de la mezcla
 
 ```mermaid
