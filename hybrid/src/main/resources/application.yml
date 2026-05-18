@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: hybrid-tutorial
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8084
+
+logging:
+  level:
+    com.tutorial.hybrid: DEBUG
+
