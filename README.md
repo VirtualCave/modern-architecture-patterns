@@ -83,20 +83,14 @@ El dominio no debería saber si la app usa REST, colas, JPA, MongoDB o Kafka. Pa
 
 ### Flujo visual
 
-```text
-HTTP request
-   ↓
-OrderController
-   ↓
-Input Port (CreateOrderUseCase / GetOrderUseCase / UpdateOrderStatusUseCase)
-   ↓
-Application Service
-   ↓
-Order (Aggregate Root)
-   ↓
-Output Port (OrderRepository / OrderEventPublisher)
-   ↓
-Adapter de infraestructura (JPA / Log)
+```mermaid
+flowchart TD
+    A[HTTP request] --> B[OrderController]
+    B --> C[Input Port<br/>CreateOrderUseCase / GetOrderUseCase / UpdateOrderStatusUseCase]
+    C --> D[Application Service]
+    D --> E[Order<br/>Aggregate Root]
+    E --> F[Output Port<br/>OrderRepository / OrderEventPublisher]
+    F --> G[Adapter de infraestructura<br/>JPA / Log]
 ```
 
 ### Pros
@@ -156,36 +150,25 @@ La idea no es “poner dos carpetas diferentes”, sino aceptar que leer y escri
 
 ### Flujo visual
 
-```text
-COMMAND
-HTTP POST/PATCH/DELETE
-   ↓
-ProductCommandController
-   ↓
-CommandBus
-   ↓
-CommandHandler específico
-   ↓
-Write model: Product
-   ↓
-ProductWriteRepositoryAdapter
-   ↓
-JPA / BD
+```mermaid
+flowchart LR
+    subgraph COMMAND[COMMAND - Escritura]
+        C1[HTTP POST/PATCH/DELETE] --> C2[ProductCommandController]
+        C2 --> C3[CommandBus]
+        C3 --> C4[CommandHandler específico]
+        C4 --> C5[Write model: Product]
+        C5 --> C6[ProductWriteRepositoryAdapter]
+        C6 --> C7[JPA / BD]
+    end
 
-QUERY
-HTTP GET
-   ↓
-ProductQueryController
-   ↓
-QueryBus
-   ↓
-QueryHandler específico
-   ↓
-Read model: ProductView
-   ↓
-ProductReadRepositoryAdapter
-   ↓
-JPA / BD
+    subgraph QUERY[QUERY - Lectura]
+        Q1[HTTP GET] --> Q2[ProductQueryController]
+        Q2 --> Q3[QueryBus]
+        Q3 --> Q4[QueryHandler específico]
+        Q4 --> Q5[Read model: ProductView]
+        Q5 --> Q6[ProductReadRepositoryAdapter]
+        Q6 --> Q7[JPA / BD]
+    end
 ```
 
 ### Pros
@@ -253,18 +236,13 @@ En lugar de pensar primero en tablas o endpoints, se piensa en:
 
 ### Flujo visual
 
-```text
-HTTP request
-   ↓
-Controller
-   ↓
-Application Service
-   ↓
-Aggregate Root / Domain Service
-   ↓
-Repository de dominio
-   ↓
-Persistencia JPA
+```mermaid
+flowchart TD
+    A[HTTP request] --> B[Controller]
+    B --> C[Application Service]
+    C --> D[Aggregate Root / Domain Service]
+    D --> E[Repository de dominio]
+    E --> F[Persistencia JPA]
 ```
 
 ### Pros
@@ -458,42 +436,15 @@ curl http://localhost:8084/api/queries/subscriptions
 
 ### Diagrama visual de la mezcla
 
-```text
-                    ┌───────────────────────────┐
-                    │           DDD             │
-                    │  negocio + reglas +       │
-                    │  bounded contexts         │
-                    └─────────────┬─────────────┘
-                                  │
-                                  │ modela el dominio
-                                  ▼
-                    ┌───────────────────────────┐
-                    │        Hexagonal          │
-                    │  puertos + adaptadores    │
-                    │  aislamiento técnico      │
-                    └─────────────┬─────────────┘
-                                  │
-                                  │ expone casos de uso
-                 ┌────────────────┴────────────────┐
-                 │                                 │
-                 ▼                                 ▼
-      ┌─────────────────────┐          ┌─────────────────────┐
-      │   CQRS - Commands   │          │    CQRS - Queries  │
-      │  escribir / cambiar │          │   leer / consultar │
-      └─────────┬───────────┘          └─────────┬───────────┘
-                │                                │
-                ▼                                ▼
-      ┌─────────────────────┐          ┌─────────────────────┐
-      │   Write Model       │          │    Read Model       │
-      │  reglas de negocio   │          │  vistas optimizadas │
-      └─────────┬───────────┘          └─────────┬───────────┘
-                │                                │
-                └──────────────┬─────────────────┘
-                               ▼
-                    ┌───────────────────────────┐
-                    │     Infraestructura       │
-                    │     REST / JPA / H2       │
-                    └───────────────────────────┘
+```mermaid
+flowchart TD
+    A[DDD<br/>negocio + reglas + bounded contexts] -->|modela el dominio| B[Hexagonal<br/>puertos + adaptadores + aislamiento técnico]
+    B -->|expone casos de uso| C[CQRS - Commands<br/>escribir / cambiar]
+    B -->|expone casos de uso| D[CQRS - Queries<br/>leer / consultar]
+    C --> E[Write Model<br/>reglas de negocio]
+    D --> F[Read Model<br/>vistas optimizadas]
+    E --> G[Infraestructura<br/>REST / JPA / H2]
+    F --> G
 ```
 
 
