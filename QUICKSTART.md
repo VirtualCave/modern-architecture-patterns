@@ -10,7 +10,6 @@
 - [Ejecutar Tests](#ejecutar-tests)
 - [Acceder a la Base de Datos H2](#acceder-a-la-base-de-datos-h2)
 - [Estructura de Cada Módulo](#estructura-de-cada-módulo)
-- [Siguientes Pasos](#siguientes-pasos)
 - [Problemas Comunes](#problemas-comunes)
 
 ## Estructura del repo
@@ -347,17 +346,6 @@ módulo/
 ├── pom.xml
 └── documentación del módulo
 ```
-
----
-
-## Siguientes Pasos
-
-1. **Lee el README principal** para entender las arquitecturas
-2. **Revisa la sección de conceptos clave** para entender el vocabulario del proyecto
-3. **Explora cada módulo en detalle** dentro de su propia documentación
-4. **Prueba los ejercicios prácticos** para afianzar lo aprendido
-5. **Revisa los anti-patrones** para saber qué evitar
-6. **Consulta la guía de errores comunes** si tienes problemas
 
 ---
 
