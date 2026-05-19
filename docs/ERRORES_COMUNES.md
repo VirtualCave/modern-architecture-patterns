@@ -18,7 +18,6 @@
 - [Problemas de configuración y arranque](#problemas-de-configuración-y-arranque)
 - [Diagnóstico rápido general](#diagnóstico-rápido-general)
 - [Resumen](#resumen)
-- [Referencias](#referencias)
 
 ## Poner lógica de negocio en el controlador
 
@@ -1061,13 +1060,6 @@ void shouldMapOrderToEntity() {
 | Tests frágiles | Fallos intermitentes | Aislar estado y mocks |
 | Configuración incorrecta | La app no arranca | Revisar puerto, Java, Maven y H2 |
 
----
-
-## Referencias
-
-- Definiciones de conceptos
-- Anti-patrones con ejemplos
-- Guía histórica de troubleshooting, ahora unificada aquí
 
 
 

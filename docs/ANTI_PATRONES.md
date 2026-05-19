@@ -14,7 +14,6 @@
 - [Mezclar bounded contexts](#mezclar-bounded-contexts)
 - [No usar Value Objects](#no-usar-value-objects)
 - [Resumen](#resumen)
-- [Referencias](#referencias)
 
 ## Cómo leer esta guía
 
@@ -888,12 +887,6 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 | Mezclar contexts | DDD | Acoplamiento entre contextos | Usar IDs y servicios de integración |
 | No usar Value Objects | DDD | Validación dispersa | Crear Value Objects |
 
----
-
-## Referencias
-
-- Definiciones de conceptos
-- Guía unificada de errores, soluciones y troubleshooting
 
 
 
