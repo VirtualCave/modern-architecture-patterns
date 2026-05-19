@@ -10,17 +10,6 @@ Este módulo muestra cómo conviven las tres arquitecturas dentro de un caso de 
 - **Hexagonal** protege el núcleo con puertos de entrada y salida.
 - **CQRS** separa comandos y consultas con buses y handlers distintos.
 
-## Ejecutar
-
-```bash
-mvn spring-boot:run
-```
-
-## Test
-
-```bash
-mvn test
-```
 
 ## Puerto
 
@@ -28,12 +17,12 @@ mvn test
 
 ## Leyenda de colores
 
-- `entry`: entrada HTTP/controladores
-- `bus`: buses de CQRS
-- `app`: handlers y servicios de aplicación
-- `domain`: aggregate y reglas de dominio
-- `port`: puertos de salida
-- `infra`: adaptadores e infraestructura
+- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
+- `bus`: buses de CQRS (`fill: #E0E7FF`, `stroke: #3730A3`)
+- `app`: handlers y servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
+- `domain`: aggregate y reglas de dominio (`fill: #FEF3C7`, `stroke: #D97706`)
+- `port`: puertos de salida (`fill: #F3E8FF`, `stroke: #7E22CE`)
+- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## Flujo alto nivel
 

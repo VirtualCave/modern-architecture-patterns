@@ -1,10 +1,22 @@
-# Anti-patrones Comunes
+# Ejemplos de anti-patrones frecuentes en arquitecturas modernas y cómo evitarlos.
 
-Ejemplos de anti-patrones frecuentes en arquitecturas modernas y cómo evitarlos.
+## Cómo leer esta guía
+
+No todos los anti-patrones aparecen en todas las arquitecturas. Algunos son **transversales** y pueden aparecer en cualquier proyecto moderno; otros son más típicos de una arquitectura concreta, sobre todo **CQRS** o **DDD**.
+
+### Resumen rápido por ámbito
+
+| Ámbito | Anti-patrones que suelen aparecer aquí |
+|--------|----------------------------------------|
+| **Transversales / varias arquitecturas** | 1. Anemic Domain Model, 2. Leaking Abstraction, 4. God Service, 5. Primitive Obsession, 6. Database-Driven Design, 8. Exponer entidades de persistencia |
+| **CQRS** | 3. Command como Query disfrazada |
+| **DDD** | 7. No proteger invariantes, 9. Mezclar bounded contexts, 10. No usar Value Objects |
+
+**Idea general:** primero mira el ámbito para saber si el problema es de diseño general o de una arquitectura concreta.
 
 ---
 
-## 1. Anemic Domain Model
+## 1. Anemic Domain Model — transversal / DDD
 
 ### Descripción
 
@@ -97,7 +109,7 @@ public class OrderService {
 
 ---
 
-## 2. Leaking Abstraction
+## 2. Leaking Abstraction — transversal / Hexagonal
 
 ### Descripción
 
@@ -177,7 +189,7 @@ public interface OrderPersistenceMapper {
 
 ---
 
-## 3. Command como Query disfrazada
+## 3. Command como Query disfrazada — CQRS
 
 ### Descripción
 
@@ -258,7 +270,7 @@ public class ProductController {
 
 ---
 
-## 4. God Service
+## 4. God Service — transversal
 
 ### Descripción
 
@@ -377,7 +389,7 @@ public class OrderEmailHandler {
 
 ---
 
-## 5. Primitive Obsession
+## 5. Primitive Obsession — transversal / DDD
 
 ### Descripción
 
@@ -488,7 +500,7 @@ public void transfer(AccountId from, AccountId to, Money amount) {
 
 ---
 
-## 6. Database-Driven Design
+## 6. Database-Driven Design — transversal
 
 ### Descripción
 
@@ -503,40 +515,14 @@ Diseñar el software pensando primero en tablas y relaciones de base de datos.
 
 ### Ejemplo: ❌ MAL - Database-Driven
 
-```sql
--- Empezamos diseñando tablas
-CREATE TABLE orders (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    customer_id BIGINT NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    total DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP NOT NULL
-);
+Primero pensamos en tablas y columnas:
+- `orders`: id, customer_id, status, total, created_at
+- `order_items`: id, order_id, product_id, quantity, price
 
-CREATE TABLE order_items (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    order_id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
-    quantity INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL
-);
-
--- Luego creamos entidades basadas en las tablas
-@Entity
-public class Order {
-    @Id
-    @GeneratedValue
-    private Long id;
-    
-    @Column(name = "customer_id")
-    private Long customerId;
-    
-    @Column(name = "status")
-    private String status;
-    
-    // ... el código refleja la estructura de la BD
-}
-```
+Después creamos entidades que copian esa estructura casi tal cual:
+- `Order` con campos `Long` y `String`
+- `OrderItem` con campos muy parecidos a la tabla
+- El lenguaje del negocio queda escondido detrás de detalles técnicos
 
 ### Ejemplo: ✅ BIEN - Domain-Driven
 
@@ -592,7 +578,7 @@ public class OrderEntity {
 
 ---
 
-## 7. No proteger invariantes
+## 7. No proteger invariantes — DDD
 
 ### Descripción
 
@@ -675,7 +661,7 @@ public class AccountService {
 
 ---
 
-## 8. Exponer entidades de persistencia
+## 8. Exponer entidades de persistencia — transversal / Hexagonal
 
 ### Descripción
 
@@ -734,7 +720,7 @@ public class ProductController {
 
 ---
 
-## 9. Mezclar bounded contexts
+## 9. Mezclar bounded contexts — DDD
 
 ### Descripción
 
@@ -798,7 +784,7 @@ public class CustomerIntegrationService {
 
 ---
 
-## 10. No usar Value Objects
+## 10. No usar Value Objects — DDD
 
 ### Descripción
 
@@ -853,23 +839,22 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 
 ## Resumen
 
-| Anti-patrón | Problema principal | Solución |
-|-------------|-------------------|----------|
-| Anemic Domain Model | Lógica dispersa en servicios | Poner lógica en el dominio |
-| Leaking Abstraction | Dominio depende de tecnología | Usar puertos/adaptadores |
-| Command como Query | Mezcla lectura/escritura | Separar commands y queries |
-| God Service | Demasiadas responsabilidades | Dividir por responsabilidad |
-| Primitive Obsession | Falta de semántica y validación | Usar Value Objects |
-| Database-Driven | Código refleja BD | Modelar dominio primero |
-| No proteger invariantes | Estado inválido posible | Validar en aggregates |
-| Exponer entidades JPA | API acoplada a persistencia | Usar DTOs |
-| Mezclar contexts | Acoplamiento entre contextos | Usar IDs y servicios de integración |
-| No usar Value Objects | Validación dispersa | Crear Value Objects |
+| Anti-patrón | Ámbito | Problema principal | Solución |
+|-------------|--------|-------------------|----------|
+| Anemic Domain Model | Transversal / DDD | Lógica dispersa en servicios | Poner lógica en el dominio |
+| Leaking Abstraction | Transversal / Hexagonal | Dominio depende de tecnología | Usar puertos/adaptadores |
+| Command como Query | CQRS | Mezcla lectura/escritura | Separar commands y queries |
+| God Service | Transversal | Demasiadas responsabilidades | Dividir por responsabilidad |
+| Primitive Obsession | Transversal / DDD | Falta de semántica y validación | Usar Value Objects |
+| Database-Driven | Transversal | Código refleja BD | Modelar dominio primero |
+| No proteger invariantes | DDD | Estado inválido posible | Validar en aggregates |
+| Exponer entidades JPA | Transversal / Hexagonal | API acoplada a persistencia | Usar DTOs |
+| Mezclar contexts | DDD | Acoplamiento entre contextos | Usar IDs y servicios de integración |
+| No usar Value Objects | DDD | Validación dispersa | Crear Value Objects |
 
 ---
 
 ## Referencias
 
-- **GLOSARIO.md** - Definiciones de conceptos
-- **docs/ERRORES_COMUNES.md** - Errores frecuentes y soluciones
-- **docs/TROUBLESHOOTING.md** - Guía de resolución de problemas
+- Definiciones de conceptos
+- Guía unificada de errores, soluciones y troubleshooting

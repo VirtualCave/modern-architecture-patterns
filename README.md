@@ -1,66 +1,14 @@
 # Tutorial de Arquitecturas Modernas: Hexagonal, CQRS, DDD y Hybrid
 
-Este repositorio contiene **cuatro proyectos Maven independientes** con ejemplos prácticos de arquitecturas modernas usando **Java 26** y **Spring Boot 4**.
+## Leyenda para diagramas
 
-La idea no es solo mostrar “cómo se organiza el código”, sino **por qué** cada arquitectura resuelve un problema distinto:
-
-- **Hexagonal**: aislar el dominio de los detalles técnicos.
-- **CQRS**: separar claramente escritura y lectura.
-- **DDD**: modelar el negocio con lenguaje y reglas del dominio.
-
-## Estructura del repo
-
-| Módulo | Arquitectura | Ejemplo del dominio | Puerto |
-|---|---|---:|---:|
-| `hexagonal/` | Ports & Adapters | Pedidos | `8081` |
-| `cqrs/` | Command Query Responsibility Segregation | Productos | `8082` |
-| `ddd/` | Domain-Driven Design | Cuentas y clientes | `8083` |
-| `hybrid/` | Hexagonal + CQRS + DDD | Suscripciones | `8084` |
-
-Cada carpeta se compila y ejecuta de forma independiente.
-
-## Ejecutar cada módulo
-
-```bash
-cd hexagonal
-mvn spring-boot:run
-
-cd cqrs
-mvn spring-boot:run
-
-cd ddd
-mvn spring-boot:run
-
-cd hybrid
-mvn spring-boot:run
-```
-
-## Tecnologías usadas
-
-- **Java 26**
-  - `record` para DTOs y value objects sencillos.
-  - Pattern matching y sealed types donde encaja.
-  - Virtual Threads en Spring Boot 4.
-- **Spring Boot 4**
-  - Web MVC para la capa HTTP.
-  - Spring Data JPA para persistencia.
-  - Validation + `ProblemDetail` para errores HTTP coherentes.
-- **H2** en memoria
-  - Pensado para tutorial y pruebas rápidas.
-  - Sin dependencia de infraestructura externa.
-- **MapStruct + Lombok**
-  - MapStruct para mappings explícitos y tipados.
-  - Lombok para reducir boilerplate donde sí aporta: controladores, servicios, adapters, entidades JPA.
-
-## Leyenda de colores para diagramas
-
-- `entry`: entrada HTTP/controladores
-- `bus`: buses de CQRS
-- `app`: servicios de aplicación y handlers
-- `domain`: aggregates, reglas y modelos de dominio
-- `port`: puertos/interfaces del dominio
-- `read`: read model de CQRS
-- `infra`: adaptadores e infraestructura técnica
+- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
+- `bus`: buses de CQRS (`fill: #E0E7FF`, `stroke: #3730A3`)
+- `app`: servicios de aplicación y handlers (`fill: #DCFCE7`, `stroke: #15803D`)
+- `domain`: aggregates, reglas y modelos de dominio (`fill: #FEF3C7`, `stroke: #D97706`)
+- `port`: puertos/interfaces del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
+- `read`: read model de CQRS (`fill: #CCFBF1`, `stroke: #0F766E`)
+- `infra`: adaptadores e infraestructura técnica (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## 1) Hexagonal Architecture
 

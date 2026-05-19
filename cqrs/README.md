@@ -31,15 +31,15 @@ Así evitas mezclar reglas de negocio de escritura con necesidades de consulta.
 
 ## Leyenda de colores
 
-- `entry`: entrada HTTP/controladores
-- `bus`: `CommandBus` y `QueryBus`
-- `app`: handlers y servicios de aplicación
-- `domain`: write model
-- `read`: read model
-- `port`: interfaces/repositorios del dominio
-- `infra`: adaptadores e infraestructura
+- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
+- `bus`: `CommandBus` y `QueryBus` (`fill: #E0E7FF`, `stroke: #3730A3`)
+- `app`: handlers y servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
+- `domain`: write model (`fill: #FEF3C7`, `stroke: #D97706`)
+- `read`: read model (`fill: #CCFBF1`, `stroke: #0F766E`)
+- `port`: interfaces/repositorios del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
+- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
-## Flujo visual (Mermaid)
+## Flujo visual
 
 ### 1) Flujo de escritura (Command)
 
@@ -99,13 +99,17 @@ flowchart TD
     class F,G infra;
 ```
 
-## Ejecutar
-
-```bash
-mvn spring-boot:run
-```
-
 ## Diagrama de Secuencia: Command (Crear Producto)
+
+Este diagrama enseña la parte de escritura de CQRS. Es decir: **crear o modificar datos**.
+
+1. El cliente envía la petición para crear el producto.
+2. El controlador solo traduce la petición a un comando.
+3. El `CommandBus` entrega ese comando al `CommandHandler` correcto.
+4. El handler usa el modelo de escritura para aplicar reglas y guardar.
+5. La base de datos recibe el cambio y el cliente obtiene confirmación.
+
+Lo importante aquí es recordar que **no se consulta nada para responder**; solo se escribe.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -135,7 +139,19 @@ sequenceDiagram
     CommandController-->>Client: 201 Created
 ```
 
+**Cómo leerlo rápido:** toda la ruta va hacia el lado de escritura. Si ves `Command`, piensa en “cambiar estado” y no en “leer datos”.
+
 ## Diagrama de Secuencia: Query (Listar Productos)
+
+Este segundo diagrama muestra la parte de lectura de CQRS. Es decir: **buscar y devolver información**.
+
+1. El cliente pide una lista de productos.
+2. El controlador convierte la petición en query.
+3. El `QueryBus` la envía al `QueryHandler`.
+4. El handler consulta el `ReadModel` o su repositorio de lectura.
+5. El resultado se transforma en DTO y vuelve al cliente.
+
+La idea clave es esta: **la consulta no modifica nada; solo lee la información preparada para mostrarla**.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -163,10 +179,5 @@ sequenceDiagram
     QueryController-->>Client: 200 OK + products
 ```
 
-## Tests
-
-```bash
-mvn test
-```
-
+**Resumen mental:** pedir datos -> convertir a query -> buscar en lectura -> adaptar a DTO -> responder.
 

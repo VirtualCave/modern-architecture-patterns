@@ -40,13 +40,13 @@ Cada contexto sigue la misma estructura: `domain -> application -> infrastructur
 
 ## Leyenda de colores
 
-- `entry`: entrada HTTP/controladores
-- `app`: servicios de aplicación
-- `domain`: aggregates, value objects y reglas
-- `port`: repositorios/puertos del dominio
-- `infra`: adaptadores e infraestructura
+- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
+- `app`: servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
+- `domain`: aggregates, value objects y reglas (`fill: #FEF3C7`, `stroke: #D97706`)
+- `port`: repositorios/puertos del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
+- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
-## Flujo visual (Mermaid)
+## Flujo visual
 
 ### 1) Abrir cuenta
 
@@ -102,13 +102,17 @@ flowchart TD
     class D,H,I port;
 ```
 
-## Ejecutar
-
-```bash
-mvn spring-boot:run
-```
-
 ## Diagrama de Secuencia: Abrir Cuenta
+
+Este diagrama explica, de forma muy simple, cómo nace una cuenta nueva:
+
+1. El cliente envía la petición.
+2. El controlador la convierte en comando.
+3. El servicio de aplicación coordina el caso de uso.
+4. El aggregate `Account` valida los datos de entrada y construye su estado inicial.
+5. El repositorio guarda y el servicio publica el evento de apertura.
+
+La idea principal es esta: **el controlador no decide nada del negocio; solo transporta la petición**.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -138,7 +142,19 @@ sequenceDiagram
     Controller-->>Client: 201 Created + Account
 ```
 
+**Cómo leerlo rápido:** el dominio crea la cuenta y el servicio la persiste; la API solo conecta los pasos.
+
 ## Diagrama de Secuencia: Transferir Dinero
+
+Este segundo diagrama es más completo porque hay dos cuentas y una regla de negocio clara: el dinero no se puede mover si no hay saldo suficiente.
+
+1. El cliente solicita la transferencia.
+2. El controlador convierte la petición en comando.
+3. El servicio de aplicación carga ambas cuentas.
+4. El `DomainService` aplica la regla de transferencia.
+5. Cada cuenta cambia su estado y el servicio guarda los cambios.
+
+La idea clave es que **la lógica de negocio está en el dominio y en el servicio de dominio, no en el controlador**.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -185,6 +201,8 @@ sequenceDiagram
     Controller-->>Client: 200 OK
 ```
 
+**Resumen mental:** pedir transferencia -> cargar cuentas -> validar saldo -> mover dinero -> guardar -> responder.
+
 ## Diagrama de Estado: Ciclo de Vida de una Cuenta
 
 ```mermaid
@@ -214,11 +232,4 @@ stateDiagram-v2
         No hay más operaciones
     end note
 ```
-
-## Tests
-
-```bash
-mvn test
-```
-
 

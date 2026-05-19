@@ -2,16 +2,58 @@
 
 Guía rápida para empezar a usar el tutorial de arquitecturas modernas.
 
----
+Este repositorio contiene **cuatro proyectos Maven independientes** con ejemplos prácticos de arquitecturas modernas usando **Java 26** y **Spring Boot 4**.
 
-## Requisitos Previos
+La idea no es solo mostrar “cómo se organiza el código”, sino **por qué** cada arquitectura resuelve un problema distinto:
 
-- **Java 26+**
-- **Maven 3.8+**
-- **IDE recomendado**: IntelliJ IDEA (con plugin Maven)
-- **curl** o cualquier cliente HTTP para probar las APIs
+- **Hexagonal**: aislar el dominio de los detalles técnicos.
+- **CQRS**: separar claramente escritura y lectura.
+- **DDD**: modelar el negocio con lenguaje y reglas del dominio.
 
----
+## Estructura del repo
+
+| Módulo | Arquitectura | Ejemplo del dominio | Puerto |
+|---|---|---:|---:|
+| `hexagonal/` | Ports & Adapters | Pedidos | `8081` |
+| `cqrs/` | Command Query Responsibility Segregation | Productos | `8082` |
+| `ddd/` | Domain-Driven Design | Cuentas y clientes | `8083` |
+| `hybrid/` | Hexagonal + CQRS + DDD | Suscripciones | `8084` |
+
+Cada carpeta se compila y ejecuta de forma independiente.
+
+## Ejecutar cada módulo
+
+```bash
+cd hexagonal
+mvn spring-boot:run
+
+cd cqrs
+mvn spring-boot:run
+
+cd ddd
+mvn spring-boot:run
+
+cd hybrid
+mvn spring-boot:run
+```
+
+## Tecnologías usadas
+
+- **Java 26**
+   - `record` para DTOs y value objects sencillos.
+   - Pattern matching y sealed types donde encaja.
+   - Virtual Threads en Spring Boot 4.
+- **Spring Boot 4**
+   - Web MVC para la capa HTTP.
+   - Spring Data JPA para persistencia.
+   - Validation + `ProblemDetail` para errores HTTP coherentes.
+- **H2** en memoria
+   - Pensado para tutorial y pruebas rápidas.
+   - Sin dependencia de infraestructura externa.
+- **MapStruct + Lombok**
+   - MapStruct para mappings explícitos y tipados.
+   - Lombok para reducir boilerplate donde sí aporta: controladores, servicios, adapters, entidades JPA.
+
 
 ## Ejecutar Todos los Módulos
 
@@ -300,7 +342,7 @@ módulo/
 │           └── com/example/
 │               └── domain/          # Tests del dominio
 ├── pom.xml
-└── README.md
+└── documentación del módulo
 ```
 
 ---
@@ -308,15 +350,11 @@ módulo/
 ## Siguientes Pasos
 
 1. **Lee el README principal** para entender las arquitecturas
-2. **Revisa el GLOSARIO.md** para entender los conceptos clave
-3. **Explora cada módulo en detalle**:
-   - `hexagonal/README.md` - Arquitectura Hexagonal
-   - `cqrs/README.md` - CQRS
-   - `ddd/README.md` - Domain-Driven Design
-   - `hybrid/README.md` - Combinación de las tres
-4. **Prueba los ejercicios** en `docs/EJERCICIOS.md`
-5. **Revisa los anti-patrones** en `docs/ANTI_PATRONES.md` para qué evitar
-6. **Consulta el troubleshooting** en `docs/TROUBLESHOOTING.md` si tienes problemas
+2. **Revisa la sección de conceptos clave** para entender el vocabulario del proyecto
+3. **Explora cada módulo en detalle** dentro de su propia documentación
+4. **Prueba los ejercicios prácticos** para afianzar lo aprendido
+5. **Revisa los anti-patrones** para saber qué evitar
+6. **Consulta la guía de errores comunes** si tienes problemas
 
 ---
 
@@ -347,20 +385,19 @@ Asegúrate de que no haya otra instancia corriendo en el mismo puerto.
 
 ## Recursos Adicionales
 
-- **PLAN_MEJORA_DOCUMENTACION.md** - Plan completo de mejoras
-- **GLOSARIO.md** - Diccionario de conceptos
-- **docs/ANTI_PATRONES.md** - Anti-patrones comunes
-- **docs/ERRORES_COMUNES.md** - Errores frecuentes
-- **docs/TROUBLESHOOTING.md** - Guía de resolución de problemas
-- **docs/EJERCICIOS.md** - Ejercicios prácticos
-- **ROADMAP.md** - Roadmap de aprendizaje
+- Plan completo de mejoras de documentación
+- Diccionario de conceptos
+- Anti-patrones comunes
+- Guía de errores comunes y troubleshooting
+- Ejercicios prácticos
+- Roadmap de aprendizaje
 
 ---
 
 ## ¿Necesitas Ayuda?
 
 Si encuentras algún problema:
-1. Revisa `docs/TROUBLESHOOTING.md`
-2. Consulta el `GLOSARIO.md` para entender los conceptos
-3. Revisa los `README.md` de cada módulo
+1. Revisa la guía de errores comunes
+2. Consulta el glosario para entender los conceptos
+3. Revisa la documentación de cada módulo
 4. Abre un issue en el repositorio

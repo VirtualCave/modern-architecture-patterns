@@ -1,6 +1,4 @@
-# Errores Comunes y Cómo Evitarlos
-
-Errores frecuentes al implementar arquitecturas modernas y cómo solucionarlos.
+# Errores frecuentes al implementar arquitecturas modernas y cómo solucionarlos.
 
 ---
 
@@ -19,10 +17,11 @@ Errores frecuentes al implementar arquitecturas modernas y cómo solucionarlos.
 // ❌ MAL - Lógica de negocio en el controlador
 @RestController
 public class OrderController {
+    private final OrderRepository orderRepository;
+
     @PostMapping("/orders")
     public Order createOrder(@RequestBody CreateOrderRequest request) {
-        Order order = new Order();
-        order.setCustomerId(request.getCustomerId());
+        Order order = new Order(request.getCustomerId(), request.getItems());
         order.setStatus(request.getStatus()); // ❌ Lógica de negocio aquí
         
         // ❌ Validación de negocio en el controlador
@@ -63,10 +62,24 @@ public class OrderController {
                 .toList()
         );
     }
+
+    private OrderItem toOrderItem(CreateOrderItemRequest item) {
+        return new OrderItem(item.getProductId(), item.getQuantity(), item.getPrice());
+    }
 }
 
 // La lógica está en el dominio
 public class Order {
+    private CustomerId customerId;
+    private List<OrderItem> items;
+    private BigDecimal total;
+    private OrderStatus status;
+
+    public Order(CustomerId customerId, List<OrderItem> items) {
+        this.customerId = customerId;
+        this.items = items;
+    }
+
     public static Order create(CustomerId customerId, List<OrderItem> items) {
         if (items.isEmpty()) { // ✅ Validación en el dominio
             throw new InvalidOrderException("El pedido debe tener items");
@@ -110,8 +123,12 @@ public class Account {
 }
 
 // Alguien puede hacer:
-account.withdraw(new Money(1000)); // Aunque solo tenga 100
-account.setBalance(new Money(-100)); // Saldo negativo
+public class AccountApplication {
+    public void misuse(Account account) {
+        account.withdraw(new Money(BigDecimal.valueOf(1000), Currency.getInstance("EUR"))); // Aunque solo tenga 100
+        account.setBalance(new Money(BigDecimal.valueOf(-100), Currency.getInstance("EUR"))); // Saldo negativo
+    }
+}
 ```
 
 ### Solución
@@ -163,20 +180,23 @@ public class ProductService {
         productRepository.save(product);
         
         // ❌ Mezcla escritura y lectura
+        return toDto(product); // ❌ La misma lógica de lectura se reutiliza aquí
+    }
+    
+    public ProductDto getProduct(Long id) {
+        Product product = productRepository.findById(id);
+        // ❌ Usa la misma lógica que createProduct
+        return toDto(product);
+    }
+
+    private ProductDto toDto(Product product) {
         ProductDto dto = new ProductDto();
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setPrice(product.getPrice());
         dto.setFormattedPrice(formatPrice(product.getPrice())); // ❌ Lógica de lectura
         dto.setAvailable(product.getStock() > 0); // ❌ Lógica de lectura
-        
         return dto;
-    }
-    
-    public ProductDto getProduct(Long id) {
-        Product product = productRepository.findById(id);
-        // ❌ Usa la misma lógica que createProduct
-        return toDtoWithCalculatedFields(product);
     }
 }
 ```
@@ -396,7 +416,7 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 public class OrderService {
     public void updateOrderStatus(OrderId id, UpdateOrderStatusCommand cmd) {
         Order order = repository.findById(id);
-        order.confirm(); // ❌ Modifica el aggregate
+        order.changeStatus(cmd.getNewStatus()); // ❌ Usa el comando pero no persiste el cambio
         // ❌ Falta guardar
     }
     
@@ -419,7 +439,7 @@ public class OrderService {
     
     public void updateOrderStatus(OrderId id, UpdateOrderStatusCommand cmd) {
         Order order = repository.findById(id);
-        order.confirm();
+        order.changeStatus(cmd.getNewStatus()); // ✅ El comando alimenta la acción del dominio
         repository.save(order); // ✅ Guardar
         eventPublisher.publish(order.pullDomainEvents()); // ✅ Publicar eventos
     }
@@ -513,6 +533,8 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
 // ❌ MAL - Dominio con Spring
 @Component
 public class Order {
+    private OrderStatus status;
+
     @Autowired
     private OrderRepository repository; // ❌ Dependencia de Spring
     
@@ -520,9 +542,12 @@ public class Order {
     private OrderEventPublisher publisher; // ❌ Dependencia de Spring
     
     public void confirm() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new IllegalStateException("Solo se pueden confirmar pedidos pendientes");
+        }
         this.status = OrderStatus.CONFIRMED;
         repository.save(this); // ❌ El dominio guarda directamente
-        publisher.publish(new OrderConfirmedEvent(this));
+        publisher.publish(new OrderConfirmedEvent(this)); // ❌ El dominio publica directamente
     }
 }
 ```
@@ -532,13 +557,14 @@ public class Order {
 ```java
 // ✅ BIEN - Dominio puro
 public class Order {
+    private OrderStatus status;
+
     // ✅ Sin dependencias de Spring
     public void confirm() {
         if (this.status != OrderStatus.PENDING) {
             throw new IllegalStateException("Solo se pueden confirmar pedidos pendientes");
         }
         this.status = OrderStatus.CONFIRMED;
-        this.addDomainEvent(new OrderConfirmedEvent(this.id));
     }
 }
 
@@ -552,7 +578,7 @@ public class OrderService {
         Order order = repository.findById(id);
         order.confirm(); // ✅ Lógica en el dominio
         repository.save(order); // ✅ Servicio guarda
-        publisher.publish(order.pullDomainEvents()); // ✅ Servicio publica
+        publisher.publish(new OrderConfirmedEvent(order.getId())); // ✅ Servicio publica
     }
 }
 ```
@@ -574,6 +600,10 @@ public class OrderService {
 // ❌ MAL - Mezclar bounded contexts
 public class Account {
     private Customer customer; // ❌ Account depende de Customer context
+
+    public void setCustomer(Customer customer) { // ❌ Setter público rompe el límite
+        this.customer = customer;
+    }
 }
 
 // O peor
@@ -643,10 +673,12 @@ public class CustomerIntegrationService {
 // ❌ MAL - No validar en constructor
 public class Order {
     private OrderId id;
+    private CustomerId customerId;
     private List<OrderItem> items;
     
-    public Order(OrderId id, List<OrderItem> items) {
+    public Order(OrderId id, CustomerId customerId, List<OrderItem> items) {
         this.id = id;
+        this.customerId = customerId;
         this.items = items; // ❌ No valida
     }
     
@@ -658,8 +690,12 @@ public class Order {
 }
 
 // Alguien puede crear:
-Order order = new Order(id, emptyList); // ❌ Estado inválido
-order.validate(); // ❌ Hay que recordar llamarlo
+public class OrderCreationDemo {
+    public void misuse(OrderId id, CustomerId customerId, List<OrderItem> emptyList) {
+        Order order = new Order(id, customerId, emptyList); // ❌ Estado inválido
+        order.validate(); // ❌ Hay que recordar llamarlo
+    }
+}
 ```
 
 ### Solución
@@ -668,10 +704,12 @@ order.validate(); // ❌ Hay que recordar llamarlo
 // ✅ BIEN - Validar en constructor
 public class Order {
     private OrderId id;
+    private CustomerId customerId;
     private List<OrderItem> items;
     
-    public Order(OrderId id, List<OrderItem> items) {
+    private Order(OrderId id, CustomerId customerId, List<OrderItem> items) {
         this.id = Objects.requireNonNull(id, "OrderId es requerido");
+        this.customerId = Objects.requireNonNull(customerId, "CustomerId es requerido");
         
         if (items == null || items.isEmpty()) { // ✅ Validación en constructor
             throw new InvalidOrderException("El pedido debe tener items");
@@ -683,12 +721,305 @@ public class Order {
     // ✅ Método de fábrica estático
     public static Order create(CustomerId customerId, List<OrderItem> items) {
         OrderId orderId = OrderId.generate();
-        return new Order(orderId, items);
+        return new Order(orderId, customerId, items);
     }
 }
 
-// No se puede crear en estado inválido
-Order order = new Order(id, emptyList); // ✅ Lanza excepción inmediatamente
+// ✅ No se puede crear en estado inválido y se obliga a usar la fábrica
+public class OrderCreationDemo {
+    public void misuse(CustomerId customerId, List<OrderItem> emptyList) {
+        Order order = Order.create(customerId, emptyList); // ✅ Lanza excepción inmediatamente
+    }
+}
+```
+
+---
+
+## 11. Errores de mapeo (MapStruct)
+
+### Síntomas
+
+- Los DTOs salen con campos nulos o incompletos
+- La compilación falla al generar el mapper
+- El mapeo funciona en unas rutas y en otras no
+- Los objetos complejos llegan mal convertidos
+
+### Error
+
+```java
+// ❌ MAL - Mapper sin una configuración clara
+@Mapper
+public interface OrderMapper {
+    OrderDto toDto(Order order);
+    Order toDomain(OrderDto dto);
+}
+```
+
+### Solución
+
+```java
+// ✅ BIEN - Mapper simple y explícito
+@Mapper(componentModel = "spring")
+public interface OrderMapper {
+    @Mapping(target = "customerId", source = "customerId.value")
+    @Mapping(target = "total", source = "total.amount")
+    @Mapping(target = "currency", source = "total.currency")
+    OrderDto toDto(Order order);
+
+    @Mapping(target = "customerId", source = "customerId")
+    @Mapping(target = "total", source = "total")
+    Order toDomain(OrderDto dto);
+}
+```
+
+### Qué revisar primero
+
+- Que el mapper tenga `componentModel = "spring"` si se inyecta como bean
+- Que los nombres de los campos coincidan cuando no haya `@Mapping`
+- Que `target` y `source` estén bien escritos
+- Que el procesador de anotaciones de MapStruct esté activo en el `pom.xml`
+
+---
+
+## 12. Errores de transacción
+
+### Síntomas
+
+- Los cambios no se guardan aunque no hay error
+- El rollback no se ejecuta como esperabas
+- Hay datos inconsistentes tras una excepción
+- Una operación compuesta deja medias escrituras
+
+### Error
+
+```java
+// ❌ MAL - Sin transacción
+@Service
+public class OrderService {
+    public void createOrder(CreateOrderCommand cmd) {
+        CustomerId customerId = cmd.getCustomerId();
+        List<OrderItem> items = cmd.getItems();
+        Order order = Order.create(customerId, items);
+        repository.save(order);
+        inventoryService.reserveItems(order.getItems());
+    }
+}
+```
+
+### Solución
+
+```java
+// ✅ BIEN - Con transacción
+@Service
+public class OrderService {
+    @Transactional
+    public void createOrder(CreateOrderCommand cmd) {
+        CustomerId customerId = cmd.getCustomerId();
+        List<OrderItem> items = cmd.getItems();
+        Order order = Order.create(customerId, items);
+        repository.save(order);
+        inventoryService.reserveItems(order.getItems());
+    }
+}
+
+// ✅ BIEN - Rollback explícito si hace falta
+@Service
+public class OrderService {
+    @Transactional(rollbackFor = {InsufficientStockException.class, InvalidOrderException.class})
+    public void createOrder(CreateOrderCommand cmd) {
+        CustomerId customerId = cmd.getCustomerId();
+        List<OrderItem> items = cmd.getItems();
+        Order order = Order.create(customerId, items);
+        repository.save(order);
+        inventoryService.reserveItems(order.getItems());
+    }
+}
+```
+
+### Qué revisar primero
+
+- Que el método sea `public`
+- Que la anotación `@Transactional` esté en el caso de uso o servicio orquestador
+- Que no estés llamando a un método transaccional desde otro del mismo bean
+- Que las excepciones realmente disparen rollback
+
+---
+
+## 13. Errores de testing
+
+### Síntomas
+
+- Tests que fallan solo en la suite completa
+- Tests lentos o frágiles
+- Dependencia del orden de ejecución
+- Diferencias entre tests unitarios e integración
+
+### Error
+
+```java
+// ❌ MAL - Test con estado compartido
+@SpringBootTest
+class OrderServiceTest {
+    @Autowired
+    private OrderService orderService;
+
+    private CreateOrderCommand cmd = new CreateOrderCommand(
+        CustomerId.of("cust-1"),
+        List.of(new OrderItem("prod-1", 2, new Money(BigDecimal.valueOf(25), Currency.getInstance("EUR"))))
+    );
+
+    @Test
+    void shouldCreateOrder() {
+        orderService.createOrder(cmd);
+    }
+}
+```
+
+### Solución
+
+```java
+// ✅ BIEN - Test unitario aislado
+class OrderServiceTest {
+    private OrderRepository orderRepository;
+    private OrderEventPublisher eventPublisher;
+    private OrderService orderService;
+    private CreateOrderCommand cmd;
+
+    @BeforeEach
+    void setUp() {
+        orderRepository = mock(OrderRepository.class);
+        eventPublisher = mock(OrderEventPublisher.class);
+        orderService = new OrderService(orderRepository, eventPublisher);
+        cmd = new CreateOrderCommand(
+            CustomerId.of("cust-1"),
+            List.of(new OrderItem("prod-1", 2, new Money(BigDecimal.valueOf(25), Currency.getInstance("EUR"))))
+        );
+    }
+
+    @Test
+    void shouldCreateOrder() {
+        when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Order order = orderService.createOrder(cmd);
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(orderRepository).save(any());
+        verify(eventPublisher).publish(any());
+    }
+}
+```
+
+### Qué revisar primero
+
+- Que cada test construya su propio estado
+- Que no dependas de la base de datos real en unit tests
+- Que los mocks estén inicializados correctamente
+- Que los tests de integración tengan limpieza automática con `@Transactional` o `@BeforeEach`
+
+---
+
+## 14. Problemas de configuración y arranque
+
+### 14.1 Puerto ya en uso
+
+**Síntoma**: Error al iniciar la aplicación por puerto ocupado.
+
+**Solución**:
+
+```properties
+server.port=8085
+```
+
+O localiza el proceso y ciérralo:
+
+```bash
+# Windows
+netstat -ano | findstr :8081
+taskkill /PID <PID> /F
+```
+
+### 14.2 Error de compilación por versión de Java
+
+**Síntoma**: Mismatch entre la versión configurada y la instalada.
+
+**Solución**:
+
+```bash
+java -version
+```
+
+### 14.3 Maven no encuentra dependencias
+
+**Síntoma**: Fallos al ejecutar `mvn install` o `mvn test`.
+
+**Solución**:
+
+```bash
+mvn clean install -U
+```
+
+### 14.4 Consola H2 no accesible
+
+**Síntoma**: No se puede abrir `h2-console`.
+
+**Solución**:
+
+```properties
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+```
+
+---
+
+## 15. Diagnóstico rápido general
+
+### Activar logs útiles
+
+```properties
+logging.level.com.example.hexagonal.domain=DEBUG
+logging.level.com.example.cqrs.domain=DEBUG
+logging.level.com.example.ddd.domain=DEBUG
+logging.level.com.example.hybrid.domain=DEBUG
+```
+
+### Verificar eventos de dominio
+
+```java
+@Test
+void shouldPublishEventWhenOrderCreated() {
+    Order order = Order.create(customer, items);
+
+    List<DomainEvent> events = order.pullDomainEvents();
+    assertThat(events).hasSize(1);
+    assertThat(events.getFirst()).isInstanceOf(OrderCreatedEvent.class);
+}
+```
+
+### Probar aggregates sin Spring
+
+```java
+@Test
+void shouldNotAllowWithdrawalWhenInsufficientFunds() {
+    Account account = new Account(new AccountId("1"), new Money(BigDecimal.valueOf(100), Currency.getInstance("EUR")));
+
+    assertThatThrownBy(() -> account.withdraw(new Money(BigDecimal.valueOf(150), Currency.getInstance("EUR"))))
+        .isInstanceOf(InsufficientFundsException.class);
+}
+```
+
+### Verificar mappers
+
+```java
+@Test
+void shouldMapOrderToEntity() {
+    CustomerId customerId = CustomerId.of("cust-1");
+    OrderItem item = new OrderItem("prod-1", 2, new Money(BigDecimal.valueOf(25), Currency.getInstance("EUR")));
+    Order order = Order.create(customerId, List.of(item));
+    OrderEntity entity = mapper.toEntity(order);
+
+    assertThat(entity.getId()).isEqualTo(order.getId().getValue());
+    assertThat(entity.getStatus()).isEqualTo(order.getStatus());
+}
 ```
 
 ---
@@ -707,11 +1038,15 @@ Order order = new Order(id, emptyList); // ✅ Lanza excepción inmediatamente
 | Dominio con Spring | Difícil probar sin Spring | Dominio puro |
 | Contextos mezclados | Acoplamiento entre contextos | Usar IDs y servicios de integración |
 | No validar en constructor | Objetos inválidos | Validar en constructor |
+| MapStruct mal configurado | Campos nulos o compilación rota | Configurar `@Mapper` y el procesador |
+| Transacciones mal definidas | Datos inconsistentes | Usar `@Transactional` |
+| Tests frágiles | Fallos intermitentes | Aislar estado y mocks |
+| Configuración incorrecta | La app no arranca | Revisar puerto, Java, Maven y H2 |
 
 ---
 
 ## Referencias
 
-- **GLOSARIO.md** - Definiciones de conceptos
-- **docs/ANTI_PATRONES.md** - Anti-patrones con ejemplos
-- **docs/TROUBLESHOOTING.md** - Guía de resolución de problemas
+- Definiciones de conceptos
+- Anti-patrones con ejemplos
+- Guía histórica de troubleshooting, ahora unificada aquí

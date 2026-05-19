@@ -32,13 +32,13 @@ La app se construye alrededor del **dominio** (`Order`), no alrededor de Spring 
 
 ## Leyenda de colores
 
-- `entry`: entrada HTTP/controladores
-- `app`: servicios de aplicación
-- `domain`: aggregates y reglas de dominio
-- `port`: puertos de entrada/salida
-- `infra`: adaptadores e infraestructura
+- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
+- `app`: servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
+- `domain`: aggregates y reglas de dominio (`fill: #FEF3C7`, `stroke: #D97706`)
+- `port`: puertos de entrada/salida (`fill: #F3E8FF`, `stroke: #7E22CE`)
+- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
-## Flujo visual (Mermaid)
+## Flujo visual
 
 ### 1) Crear pedido
 
@@ -97,13 +97,17 @@ flowchart TD
 	class F,H domain;
 ```
 
-## Ejecutar
-
-```bash
-mvn spring-boot:run
-```
-
 ## Diagrama de Secuencia: Crear Pedido
+
+Este diagrama resume el flujo completo de una petición nueva de pedido:
+
+1. El cliente hace la llamada HTTP.
+2. El controlador solo traduce la petición a un comando.
+3. El caso de uso y el servicio de aplicación coordinan el proceso.
+4. El aggregate `Order` valida sus reglas y calcula su estado.
+5. El repositorio guarda el resultado y el publicador emite los eventos.
+
+Piensa en él como una línea muy simple: **recibir -> traducir -> ejecutar -> validar -> guardar -> notificar**.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -143,7 +147,19 @@ sequenceDiagram
     Controller-->>Client: 201 Created + Order
 ```
 
+**Cómo leerlo rápido:** el controlador no decide reglas de negocio; solo conecta la API con el caso de uso. La parte importante ocurre en `Service` y en `Order`.
+
 ## Diagrama de Secuencia: Cambiar Estado
+
+Este segundo diagrama muestra el caso más común después de crear el pedido: cambiar su estado.
+
+1. El cliente pide un cambio de estado.
+2. El controlador convierte la petición en comando.
+3. El servicio carga el pedido desde el repositorio.
+4. El aggregate comprueba si la transición es válida.
+5. Si la transición es correcta, se guarda el nuevo estado y se publica el evento.
+
+La idea clave es esta: **el dominio decide si el cambio es válido; la infraestructura solo ejecuta la orden**.
 
 ```mermaid
 %%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
@@ -175,6 +191,8 @@ sequenceDiagram
     Controller-->>Client: 200 OK
 ```
 
+**Resumen mental:** pedir cambio -> cargar pedido -> validar transición -> guardar -> publicar evento -> responder.
+
 ## Diagrama de Estado: Ciclo de Vida de un Pedido
 
 ```mermaid
@@ -203,11 +221,4 @@ stateDiagram-v2
         No hay más transiciones
     end note
 ```
-
-## Tests
-
-```bash
-mvn test
-```
-
 
