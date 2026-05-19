@@ -154,12 +154,12 @@ sequenceDiagram
     QueryBus->>QueryHandler: handle(query)
     QueryHandler->>ReadRepo: findAll()
     ReadRepo->>DB: SELECT
-    DB-->>ReadRepo: List<ProductView>
-    ReadRepo-->>QueryHandler: List<ProductView>
+    DB-->>ReadRepo: ProductView[]
+    ReadRepo-->>QueryHandler: ProductView[]
     QueryHandler->>ReadModel: toDto(views)
-    ReadModel-->>QueryHandler: List<ProductDto>
-    QueryHandler-->>QueryBus: List<ProductDto>
-    QueryBus-->>QueryController: List<ProductDto>
+    ReadModel-->>QueryHandler: ProductDto[]
+    QueryHandler-->>QueryBus: ProductDto[]
+    QueryBus-->>QueryController: ProductDto[]
     QueryController-->>Client: 200 OK + products
 ```
 

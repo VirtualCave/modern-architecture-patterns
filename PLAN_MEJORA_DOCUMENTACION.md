@@ -512,9 +512,9 @@ sequenceDiagram
     QueryController->>QueryBus: dispatch(GetAllProductsQuery)
     QueryBus->>QueryHandler: handle(query)
     QueryHandler->>ReadRepo: findAll()
-    ReadRepo-->>QueryHandler: List<ProductView>
-    QueryHandler-->>QueryBus: List<ProductView>
-    QueryBus-->>QueryController: List<ProductView>
+    ReadRepo-->>QueryHandler: ProductView[]
+    QueryHandler-->>QueryBus: ProductView[]
+    QueryBus-->>QueryController: ProductView[]
     QueryController-->>Client: 200 OK + products
 ```
 
