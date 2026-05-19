@@ -2,7 +2,6 @@
 
 ## Índice de contenidos
 
-- [Leyenda para diagramas](#leyenda-para-diagramas)
 - [Hexagonal Architecture](#hexagonal-architecture)
 - [CQRS](#cqrs)
 - [DDD](#ddd)
@@ -10,16 +9,6 @@
 - [Regla práctica para elegir](#regla-práctica-para-elegir)
 - [APIs de ejemplo](#apis-de-ejemplo)
 - [Diagramas de Arquitectura](#diagramas-de-arquitectura)
-
-## Leyenda para diagramas
-
-- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
-- `bus`: buses de CQRS (`fill: #E0E7FF`, `stroke: #3730A3`)
-- `app`: servicios de aplicación y handlers (`fill: #DCFCE7`, `stroke: #15803D`)
-- `domain`: aggregates, reglas y modelos de dominio (`fill: #FEF3C7`, `stroke: #D97706`)
-- `port`: puertos/interfaces del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
-- `read`: read model de CQRS (`fill: #CCFBF1`, `stroke: #0F766E`)
-- `infra`: adaptadores e infraestructura técnica (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## Hexagonal Architecture
 
