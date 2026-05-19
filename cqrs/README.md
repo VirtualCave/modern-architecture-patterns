@@ -29,11 +29,22 @@ Así evitas mezclar reglas de negocio de escritura con necesidades de consulta.
   - Mapper único de persistencia: `infrastructure/persistence/mapper/ProductPersistenceMapper`
   - Centraliza conversiones entre `Product` (write model), `ProductEntity` y `ProductView` (read model).
 
+## Leyenda de colores
+
+- `entry`: entrada HTTP/controladores
+- `bus`: `CommandBus` y `QueryBus`
+- `app`: handlers y servicios de aplicación
+- `domain`: write model
+- `read`: read model
+- `port`: interfaces/repositorios del dominio
+- `infra`: adaptadores e infraestructura
+
 ## Flujo visual (Mermaid)
 
 ### 1) Flujo de escritura (Command)
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP POST/PATCH/DELETE /api/commands/products] --> B[ProductCommandController]
     B --> C[CommandBus.dispatch]
@@ -43,12 +54,14 @@ flowchart TD
     F --> G[ProductWriteRepositoryAdapter]
     G --> H[SpringDataProductWriteRepository]
 
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef bus fill:#E0E7FF,stroke:#3730A3,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
 
     class A,B entry;
     class C bus;
@@ -61,6 +74,7 @@ flowchart TD
 ### 2) Flujo de lectura (Query)
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP GET /api/queries/products] --> B[ProductQueryController]
     B --> C[QueryBus.dispatch]
@@ -70,11 +84,13 @@ flowchart TD
     F --> G[SpringDataProductReadRepository]
     D --> H[ProductView read model]
 
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef read fill:#E0F7FA,stroke:#00838F,stroke-width:1px,color:#006064;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef bus fill:#E0E7FF,stroke:#3730A3,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef read fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
 
     class A,B entry;
     class C bus;
@@ -92,6 +108,7 @@ mvn spring-boot:run
 ## Diagrama de Secuencia: Command (Crear Producto)
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant CommandController
@@ -116,23 +133,12 @@ sequenceDiagram
     CommandHandler-->>CommandBus: Void
     CommandBus-->>CommandController: Void
     CommandController-->>Client: 201 Created
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
-
-    class Client,CommandController entry;
-    class CommandBus bus;
-    class CommandHandler app;
-    class WriteModel domain;
-    class WriteRepo,DB infra;
 ```
 
 ## Diagrama de Secuencia: Query (Listar Productos)
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant QueryController
@@ -155,18 +161,6 @@ sequenceDiagram
     QueryHandler-->>QueryBus: List<ProductDto>
     QueryBus-->>QueryController: List<ProductDto>
     QueryController-->>Client: 200 OK + products
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef read fill:#E0F7FA,stroke:#00838F,stroke-width:1px,color:#006064;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
-
-    class Client,QueryController entry;
-    class QueryBus bus;
-    class QueryHandler app;
-    class ReadModel read;
-    class ReadRepo,DB infra;
 ```
 
 ## Tests

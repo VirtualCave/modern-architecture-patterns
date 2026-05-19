@@ -38,11 +38,20 @@ Cada contexto sigue la misma estructura: `domain -> application -> infrastructur
   - Contexto `customer`: `customer/infrastructure/persistence/mapper/CustomerPersistenceMapper`
   - Se usa en infraestructura para mapear dominio <-> entidad sin romper el modelo de dominio.
 
+## Leyenda de colores
+
+- `entry`: entrada HTTP/controladores
+- `app`: servicios de aplicación
+- `domain`: aggregates, value objects y reglas
+- `port`: repositorios/puertos del dominio
+- `infra`: adaptadores e infraestructura
+
 ## Flujo visual (Mermaid)
 
 ### 1) Abrir cuenta
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP POST /api/accounts] --> B[AccountController]
     B --> C[AccountApplicationService.openAccount]
@@ -51,11 +60,13 @@ flowchart TD
     E --> F[AccountRepositoryAdapter]
     F --> G[SpringDataAccountRepository]
 
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
 
     class A,B entry;
     class C app;
@@ -67,6 +78,7 @@ flowchart TD
 ### 2) Transferir dinero
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP POST /api/accounts/:id/transfer] --> B[AccountController]
     B --> C[AccountApplicationService.transfer]
@@ -77,10 +89,12 @@ flowchart TD
     C --> H[AccountRepository.save from]
     C --> I[AccountRepository.save to]
 
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
 
     class A,B entry;
     class C app;
@@ -97,6 +111,7 @@ mvn spring-boot:run
 ## Diagrama de Secuencia: Abrir Cuenta
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant Controller
@@ -121,23 +136,12 @@ sequenceDiagram
     AppService-->>Controller: Account
     Controller->>Controller: toResponse(account)
     Controller-->>Client: 201 Created + Account
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
-
-    class Client,Controller entry;
-    class AppService app;
-    class Account domain;
-    class Repository port;
-    class DB infra;
 ```
 
 ## Diagrama de Secuencia: Transferir Dinero
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant Controller
@@ -179,23 +183,12 @@ sequenceDiagram
     ToAccount-->>AppService: [MoneyDepositedEvent]
     AppService-->>Controller: success
     Controller-->>Client: 200 OK
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
-
-    class Client,Controller entry;
-    class AppService,DomainService app;
-    class FromAccount,ToAccount domain;
-    class FromRepo,ToRepo port;
-    class DB infra;
 ```
 
 ## Diagrama de Estado: Ciclo de Vida de una Cuenta
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 stateDiagram-v2
     [*] --> ACTIVE: open()
     ACTIVE --> ACTIVE: deposit()

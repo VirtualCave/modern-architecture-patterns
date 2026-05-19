@@ -26,9 +26,19 @@ mvn test
 
 - `8084`
 
+## Leyenda de colores
+
+- `entry`: entrada HTTP/controladores
+- `bus`: buses de CQRS
+- `app`: handlers y servicios de aplicación
+- `domain`: aggregate y reglas de dominio
+- `port`: puertos de salida
+- `infra`: adaptadores e infraestructura
+
 ## Flujo alto nivel
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[REST Controller] --> B[CommandBus / QueryBus]
     B --> C[Command/Query Handler]
@@ -39,12 +49,14 @@ flowchart TD
     F --> H[InMemorySubscriptionProjectionRepository]
     F --> I[LogSubscriptionEventPublisher]
 
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef bus fill:#E8EAF6,stroke:#283593,stroke-width:1px,color:#1A237E;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef bus fill:#E0E7FF,stroke:#3730A3,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
 
     class A entry;
     class B bus;

@@ -52,6 +52,16 @@ mvn spring-boot:run
   - MapStruct para mappings explícitos y tipados.
   - Lombok para reducir boilerplate donde sí aporta: controladores, servicios, adapters, entidades JPA.
 
+## Leyenda de colores para diagramas
+
+- `entry`: entrada HTTP/controladores
+- `bus`: buses de CQRS
+- `app`: servicios de aplicación y handlers
+- `domain`: aggregates, reglas y modelos de dominio
+- `port`: puertos/interfaces del dominio
+- `read`: read model de CQRS
+- `infra`: adaptadores e infraestructura técnica
+
 ## 1) Hexagonal Architecture
 
 ### Idea principal
@@ -84,6 +94,7 @@ El dominio no debería saber si la app usa REST, colas, JPA, MongoDB o Kafka. Pa
 ### Flujo visual
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP request] --> B[OrderController]
     B --> C[Input Port<br/>CreateOrderUseCase / GetOrderUseCase / UpdateOrderStatusUseCase]
@@ -91,6 +102,20 @@ flowchart TD
     D --> E[Order<br/>Aggregate Root]
     E --> F[Output Port<br/>OrderRepository / OrderEventPublisher]
     F --> G[Adapter de infraestructura<br/>JPA / Log]
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+
+    class A,B entry;
+    class C,F port;
+    class D app;
+    class E domain;
+    class G infra;
 ```
 
 ### Pros
@@ -151,6 +176,7 @@ La idea no es “poner dos carpetas diferentes”, sino aceptar que leer y escri
 ### Flujo visual
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart LR
     subgraph COMMAND[COMMAND - Escritura]
         C1[HTTP POST/PATCH/DELETE] --> C2[ProductCommandController]
@@ -169,6 +195,22 @@ flowchart LR
         Q5 --> Q6[ProductReadRepositoryAdapter]
         Q6 --> Q7[JPA / BD]
     end
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef bus fill:#E0E7FF,stroke:#3730A3,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef read fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+
+    class C1,C2,Q1,Q2 entry;
+    class C3,Q3 bus;
+    class C4,Q4 app;
+    class C5 domain;
+    class Q5 read;
+    class C6,C7,Q6,Q7 infra;
 ```
 
 ### Pros
@@ -237,12 +279,27 @@ En lugar de pensar primero en tablas o endpoints, se piensa en:
 ### Flujo visual
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[HTTP request] --> B[Controller]
     B --> C[Application Service]
     C --> D[Aggregate Root / Domain Service]
     D --> E[Repository de dominio]
     E --> F[Persistencia JPA]
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+
+    class A,B entry;
+    class C app;
+    class D domain;
+    class E port;
+    class F infra;
 ```
 
 ### Pros
@@ -439,6 +496,7 @@ curl http://localhost:8084/api/queries/subscriptions
 ### Arquitectura Hexagonal - Componentes
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 graph TB
     subgraph "Entry Layer"
         REST[REST Controller]
@@ -473,11 +531,13 @@ graph TB
     OutputPorts --> JPA
     OutputPorts --> EventPublisher
     OutputPorts --> Log
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
     
-    classDef entry fill:#E3F2FD,stroke:#1565C0
-    classDef app fill:#E8F5E9,stroke:#2E7D32
-    classDef domain fill:#FFF8E1,stroke:#EF6C00
-    classDef infra fill:#FBE9E7,stroke:#D84315
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
     
     class REST,CLI,MQ entry
     class InputPorts,AppServices app
@@ -488,6 +548,7 @@ graph TB
 ### Arquitectura CQRS - Componentes
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 graph TB
     subgraph "Command Side"
         CController[Command Controller]
@@ -521,10 +582,12 @@ graph TB
     QHandlers --> RModel
     QHandlers --> RRepo
     RRepo --> RDB
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
     
-    classDef command fill:#FFEBEE,stroke:#C62828
-    classDef query fill:#E3F2FD,stroke:#1565C0
-    classDef db fill:#ECEFF1,stroke:#455A64
+    classDef command fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef query fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
+    classDef db fill:#E5E7EB,stroke:#4B5563,stroke-width:1px,color:#111827;
     
     class CController,CBus,CHandlers,WModel,WRepo command
     class QController,QBus,QHandlers,RModel,RRepo query
@@ -547,6 +610,7 @@ graph TB
 ### Diagrama de Decisión
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[¿El sistema es simple?] -->|Sí| B[CRUD clásico]
     A -->|No| C[¿La infraestructura cambiará?]
@@ -577,11 +641,13 @@ flowchart TD
     Q --> S
     S -->|Sí| T[Hybrid<br/>Hexagonal + CQRS + DDD]
     S -->|No| U[Combinación parcial]
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
     
-    classDef simple fill:#C8E6C9,stroke:#388E3C
-    classDef medium fill:#FFF9C4,stroke:#FBC02D
-    classDef complex fill:#FFCCBC,stroke:#F57C00
-    classDef hybrid fill:#E1BEE7,stroke:#7B1FA2
+    classDef simple fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef medium fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef complex fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+    classDef hybrid fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
     
     class B,I simple
     class D,F,H medium
@@ -592,6 +658,7 @@ flowchart TD
 ### Diagrama visual de la mezcla
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
     A[DDD<br/>negocio + reglas + bounded contexts] -->|modela el dominio| B[Hexagonal<br/>puertos + adaptadores + aislamiento técnico]
     B -->|expone casos de uso| C[CQRS - Commands<br/>escribir / cambiar]
@@ -600,6 +667,20 @@ flowchart TD
     D --> F[Read Model<br/>vistas optimizadas]
     E --> G[Infraestructura<br/>REST / JPA / H2]
     F --> G
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef read fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+
+    class A,E domain;
+    class B port;
+    class C app;
+    class D,F read;
+    class G infra;
 ```
 
 

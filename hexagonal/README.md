@@ -30,11 +30,20 @@ La app se construye alrededor del **dominio** (`Order`), no alrededor de Spring 
   - Mapper persistencia: `infrastructure/adapter/output/persistence/mapper/OrderPersistenceMapper`
   - Los mapeos viven en infraestructura para no contaminar el dominio.
 
+## Leyenda de colores
+
+- `entry`: entrada HTTP/controladores
+- `app`: servicios de aplicación
+- `domain`: aggregates y reglas de dominio
+- `port`: puertos de entrada/salida
+- `infra`: adaptadores e infraestructura
+
 ## Flujo visual (Mermaid)
 
 ### 1) Crear pedido
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
 	A[HTTP POST /api/orders] --> B[OrderController]
 	B --> C[CreateOrderUseCase]
@@ -47,11 +56,13 @@ flowchart TD
 	I --> J[OrderEventPublisher.publish]
 	J --> K[LogOrderEventPublisher]
 
-	classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-	classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-	classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-	classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-	classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
+  linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+  classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+  classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+  classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+  classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+  classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
 
 	class A,B entry;
 	class C,F,J port;
@@ -63,6 +74,7 @@ flowchart TD
 ### 2) Cambiar estado (confirm/ship/deliver/cancel)
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
 	A[HTTP PATCH /api/orders/:id/*] --> B[OrderController]
 	B --> C[UpdateOrderStatusUseCase]
@@ -72,10 +84,12 @@ flowchart TD
 	D --> G[OrderRepository.save]
 	D --> H[publish domain events]
 
-	classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-	classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-	classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-	classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
+  linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+  classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+  classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+  classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+  classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
 
 	class A,B entry;
 	class C,E,G port;
@@ -92,6 +106,7 @@ mvn spring-boot:run
 ## Diagrama de Secuencia: Crear Pedido
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant Controller
@@ -126,23 +141,12 @@ sequenceDiagram
     UseCase-->>Controller: Order
     Controller->>Controller: toResponse(order)
     Controller-->>Client: 201 Created + Order
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-    classDef infra fill:#FBE9E7,stroke:#D84315,stroke-width:1px,color:#BF360C;
-
-    class Client,Controller entry;
-    class UseCase,Service app;
-    class Order domain;
-    class Repository,EventPublisher port;
-    class DB infra;
 ```
 
 ## Diagrama de Secuencia: Cambiar Estado
 
 ```mermaid
+%%{init: {'themeVariables': {'background':'transparent','lineColor':'#94A3B8'}}}%%
 sequenceDiagram
     participant Client
     participant Controller
@@ -169,21 +173,12 @@ sequenceDiagram
     Service-->>UseCase: Order
     UseCase-->>Controller: Order
     Controller-->>Client: 200 OK
-
-    classDef entry fill:#E3F2FD,stroke:#1565C0,stroke-width:1px,color:#0D47A1;
-    classDef app fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20;
-    classDef domain fill:#FFF8E1,stroke:#EF6C00,stroke-width:1px,color:#E65100;
-    classDef port fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1px,color:#4A148C;
-
-    class Client,Controller entry;
-    class UseCase,Service app;
-    class Order domain;
-    class Repository,EventPublisher port;
 ```
 
 ## Diagrama de Estado: Ciclo de Vida de un Pedido
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 stateDiagram-v2
     [*] --> PENDING: create()
     PENDING --> CONFIRMED: confirm()
