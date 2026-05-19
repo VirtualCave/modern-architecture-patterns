@@ -1,18 +1,14 @@
 # Glosario de Conceptos
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Arquitecturales](#arquitecturales)
 - [Técnicos](#tecnicos)
-- [Patrones Anti](#patrones-anti)
+- [Antipatrones](#antipatrones)
 - [Comparativas](#comparativas)
 - [Patrones Relacionados](#patrones-relacionados)
 - [Acronyms](#acronyms)
 - [Referencias Cruzadas](#referencias-cruzadas)
-
-Glosario de términos clave para entender las arquitecturas modernas presentadas en este tutorial.
-
----
 
 ## Arquitecturales
 
@@ -297,6 +293,7 @@ public class Account {
 
 ---
 
+<a id="tecnicos"></a>
 ## Técnicos
 
 ### Application Service
@@ -450,7 +447,7 @@ public class CreateOrderService implements CreateOrderUseCase {
 
 ---
 
-## Patrones Anti
+## Antipatrones
 
 ### Anemic Domain Model
 
@@ -711,4 +708,6 @@ public void transfer(AccountId from, AccountId to, Money amount) {
 - Application Service → Domain Service, Repository
 - Mapper → DTO, Entity, Domain Model
 - Event Publisher → Domain Event, Event Handler
+
+
 

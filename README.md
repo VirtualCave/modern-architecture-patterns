@@ -1,13 +1,13 @@
 # Tutorial de Arquitecturas Modernas: Hexagonal, CQRS, DDD y Hybrid
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Leyenda para diagramas](#leyenda-para-diagramas)
-- [1) Hexagonal Architecture](#1-hexagonal-architecture)
-- [2) CQRS](#2-cqrs)
-- [3) DDD](#3-ddd)
-- [Cuándo mezclar arquitecturas](#cuando-mezclar-arquitecturas)
-- [Regla práctica para elegir](#regla-practica-para-elegir)
+- [Hexagonal Architecture](#hexagonal-architecture)
+- [CQRS](#cqrs)
+- [DDD](#ddd)
+- [Cuándo mezclar arquitecturas](#cuándo-mezclar-arquitecturas)
+- [Regla práctica para elegir](#regla-práctica-para-elegir)
 - [APIs de ejemplo](#apis-de-ejemplo)
 - [Diagramas de Arquitectura](#diagramas-de-arquitectura)
 
@@ -21,7 +21,7 @@
 - `read`: read model de CQRS (`fill: #CCFBF1`, `stroke: #0F766E`)
 - `infra`: adaptadores e infraestructura técnica (`fill: #FFEDD5`, `stroke: #C2410C`)
 
-## 1) Hexagonal Architecture
+## Hexagonal Architecture
 
 ### Idea principal
 
@@ -103,7 +103,7 @@ flowchart TD
 - Prototipos desechables.
 - Sistemas muy pequeños donde el coste de abstracción supera el beneficio.
 
-## 2) CQRS
+## CQRS
 
 ### Idea principal
 
@@ -200,7 +200,7 @@ flowchart LR
 - Equipos que aún no dominan bien la arquitectura base.
 - Proyectos donde separar lectura/escritura no aporta un beneficio real.
 
-## 3) DDD
+## DDD
 
 ### Idea principal
 
@@ -571,34 +571,34 @@ graph TB
 ```mermaid
 %%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
 flowchart TD
-    A[¿El sistema es simple?] -->|Sí| B[CRUD clásico]
-    A -->|No| C[¿La infraestructura cambiará?]
+    A[El sistema es simple?] -->|Si| B[CRUD clasico]
+    A -->|No| C[La infraestructura cambiara?]
     
-    C -->|Sí| D[Hexagonal]
-    C -->|No| E[¿Lectura y escritura son distintas?]
+    C -->|Si| D[Hexagonal]
+    C -->|No| E[Lectura y escritura son distintas?]
     
-    E -->|Sí| F[CQRS]
-    E -->|No| G[¿El dominio es complejo?]
+    E -->|Si| F[CQRS]
+    E -->|No| G[El dominio es complejo?]
     
-    G -->|Sí| H[DDD]
+    G -->|Si| H[DDD]
     G -->|No| I[Arquitectura en capas]
     
-    D --> J[¿También necesita CQRS?]
-    J -->|Sí| K[Hexagonal + CQRS]
+    D --> J[Tambien necesita CQRS?]
+    J -->|Si| K[Hexagonal + CQRS]
     J -->|No| L[Hexagonal solo]
     
-    F --> M[¿También necesita DDD?]
-    M -->|Sí| N[DDD + CQRS]
+    F --> M[Tambien necesita DDD?]
+    M -->|Si| N[DDD + CQRS]
     M -->|No| O[CQRS solo]
     
-    H --> P[¿También necesita Hexagonal?]
-    P -->|Sí| Q[Hexagonal + DDD]
+    H --> P[Tambien necesita Hexagonal?]
+    P -->|Si| Q[Hexagonal + DDD]
     P -->|No| R[DDD solo]
     
-    K --> S[¿También necesita DDD?]
+    K --> S[Tambien necesita DDD?]
     N --> S
     Q --> S
-    S -->|Sí| T[Hybrid<br/>Hexagonal + CQRS + DDD]
+    S -->|Si| T[Hybrid<br/>Hexagonal + CQRS + DDD]
     S -->|No| U[Combinación parcial]
 
     linkStyle default stroke:#94A3B8,stroke-width:2px;
@@ -641,6 +641,8 @@ flowchart TD
     class D,F read;
     class G infra;
 ```
+
+
 
 
 

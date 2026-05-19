@@ -1,28 +1,26 @@
 # Errores frecuentes al implementar arquitecturas modernas y cómo solucionarlos.
 
-## Indice de contenidos
+## Índice de contenidos
 
-- [1. Poner lógica de negocio en el controlador](#1-poner-logica-de-negocio-en-el-controlador)
-- [2. No proteger invariantes en el aggregate](#2-no-proteger-invariantes-en-el-aggregate)
-- [3. Mezclar concerns de lectura y escritura](#3-mezclar-concerns-de-lectura-y-escritura)
-- [4. Exponer entidades de persistencia](#4-exponer-entidades-de-persistencia)
-- [5. No usar Value Objects](#5-no-usar-value-objects)
-- [6. El dominio no se guarda correctamente](#6-el-dominio-no-se-guarda-correctamente)
-- [7. CQRS: El read model no se actualiza](#7-cqrs-el-read-model-no-se-actualiza)
-- [8. El dominio depende de Spring](#8-el-dominio-depende-de-spring)
-- [9. DDD: Bounded contexts mezclados](#9-ddd-bounded-contexts-mezclados)
-- [10. No validar en el constructor](#10-no-validar-en-el-constructor)
-- [11. Errores de mapeo (MapStruct)](#11-errores-de-mapeo-mapstruct)
-- [12. Errores de transacción](#12-errores-de-transaccion)
-- [13. Errores de testing](#13-errores-de-testing)
-- [14. Problemas de configuración y arranque](#14-problemas-de-configuracion-y-arranque)
-- [15. Diagnóstico rápido general](#15-diagnostico-rapido-general)
+- [Poner lógica de negocio en el controlador](#poner-lógica-de-negocio-en-el-controlador)
+- [No proteger invariantes en el aggregate](#no-proteger-invariantes-en-el-aggregate)
+- [Mezclar concerns de lectura y escritura](#mezclar-concerns-de-lectura-y-escritura)
+- [Exponer entidades de persistencia](#exponer-entidades-de-persistencia)
+- [No usar Value Objects](#no-usar-value-objects)
+- [El dominio no se guarda correctamente](#el-dominio-no-se-guarda-correctamente)
+- [CQRS: El read model no se actualiza](#cqrs-el-read-model-no-se-actualiza)
+- [El dominio depende de Spring](#el-dominio-depende-de-spring)
+- [DDD: Bounded contexts mezclados](#ddd-bounded-contexts-mezclados)
+- [No validar en el constructor](#no-validar-en-el-constructor)
+- [Errores de mapeo (MapStruct)](#errores-de-mapeo-mapstruct)
+- [Errores de transacción](#errores-de-transacción)
+- [Errores de testing](#errores-de-testing)
+- [Problemas de configuración y arranque](#problemas-de-configuración-y-arranque)
+- [Diagnóstico rápido general](#diagnóstico-rápido-general)
 - [Resumen](#resumen)
 - [Referencias](#referencias)
 
----
-
-## 1. Poner lógica de negocio en el controlador
+## Poner lógica de negocio en el controlador
 
 ### Síntomas
 
@@ -117,7 +115,7 @@ public class Order {
 
 ---
 
-## 2. No proteger invariantes en el aggregate
+## No proteger invariantes en el aggregate
 
 ### Síntomas
 
@@ -181,7 +179,7 @@ public class Account {
 
 ---
 
-## 3. Mezclar concerns de lectura y escritura
+## Mezclar concerns de lectura y escritura
 
 ### Síntomas
 
@@ -258,7 +256,7 @@ public class ProductView {
 
 ---
 
-## 4. Exponer entidades de persistencia
+## Exponer entidades de persistencia
 
 ### Síntomas
 
@@ -321,7 +319,7 @@ public class ProductController {
 
 ---
 
-## 5. No usar Value Objects
+## No usar Value Objects
 
 ### Síntomas
 
@@ -420,7 +418,7 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 
 ---
 
-## 6. El dominio no se guarda correctamente
+## El dominio no se guarda correctamente
 
 ### Síntomas
 
@@ -475,7 +473,7 @@ public class OrderService {
 
 ---
 
-## 7. CQRS: El read model no se actualiza
+## CQRS: El read model no se actualiza
 
 ### Síntomas
 
@@ -538,7 +536,7 @@ public class CreateProductHandler implements CommandHandler<CreateProductCommand
 
 ---
 
-## 8. El dominio depende de Spring
+## El dominio depende de Spring
 
 ### Síntomas
 
@@ -605,7 +603,7 @@ public class OrderService {
 
 ---
 
-## 9. DDD: Bounded contexts mezclados
+## DDD: Bounded contexts mezclados
 
 ### Síntomas
 
@@ -678,7 +676,7 @@ public class CustomerIntegrationService {
 
 ---
 
-## 10. No validar en el constructor
+## No validar en el constructor
 
 ### Síntomas
 
@@ -755,7 +753,7 @@ public class OrderCreationDemo {
 
 ---
 
-## 11. Errores de mapeo (MapStruct)
+## Errores de mapeo (MapStruct)
 
 ### Síntomas
 
@@ -801,7 +799,7 @@ public interface OrderMapper {
 
 ---
 
-## 12. Errores de transacción
+## Errores de transacción
 
 ### Síntomas
 
@@ -865,7 +863,7 @@ public class OrderService {
 
 ---
 
-## 13. Errores de testing
+## Errores de testing
 
 ### Síntomas
 
@@ -938,9 +936,9 @@ class OrderServiceTest {
 
 ---
 
-## 14. Problemas de configuración y arranque
+## Problemas de configuración y arranque
 
-### 14.1 Puerto ya en uso
+### Puerto ya en uso
 
 **Síntoma**: Error al iniciar la aplicación por puerto ocupado.
 
@@ -958,7 +956,7 @@ netstat -ano | findstr :8081
 taskkill /PID <PID> /F
 ```
 
-### 14.2 Error de compilación por versión de Java
+### Error de compilación por versión de Java
 
 **Síntoma**: Mismatch entre la versión configurada y la instalada.
 
@@ -968,7 +966,7 @@ taskkill /PID <PID> /F
 java -version
 ```
 
-### 14.3 Maven no encuentra dependencias
+### Maven no encuentra dependencias
 
 **Síntoma**: Fallos al ejecutar `mvn install` o `mvn test`.
 
@@ -978,7 +976,7 @@ java -version
 mvn clean install -U
 ```
 
-### 14.4 Consola H2 no accesible
+### Consola H2 no accesible
 
 **Síntoma**: No se puede abrir `h2-console`.
 
@@ -991,7 +989,7 @@ spring.h2.console.path=/h2-console
 
 ---
 
-## 15. Diagnóstico rápido general
+## Diagnóstico rápido general
 
 ### Activar logs útiles
 
@@ -1070,4 +1068,6 @@ void shouldMapOrderToEntity() {
 - Definiciones de conceptos
 - Anti-patrones con ejemplos
 - Guía histórica de troubleshooting, ahora unificada aquí
+
+
 

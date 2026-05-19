@@ -1,14 +1,12 @@
 # CQRS Tutorial
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Idea principal (en sencillo)](#idea-principal-en-sencillo)
 - [Conceptos clave en este módulo](#conceptos-clave-en-este-módulo)
 - [Flujo visual](#flujo-visual)
 - [Diagrama de Secuencia: Command (Crear Producto)](#diagrama-de-secuencia-command-crear-producto)
 - [Diagrama de Secuencia: Query (Listar Productos)](#diagrama-de-secuencia-query-listar-productos)
-
-Ejemplo práctico de **CQRS (Command Query Responsibility Segregation)** con catálogo de productos.
 
 ## Idea principal (en sencillo)
 
@@ -40,7 +38,7 @@ Así evitas mezclar reglas de negocio de escritura con necesidades de consulta.
 
 ## Flujo visual
 
-### 1) Flujo de escritura (Command)
+### Flujo de escritura (Command)
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
@@ -70,7 +68,7 @@ flowchart TD
     class G,H infra;
 ```
 
-### 2) Flujo de lectura (Query)
+### Flujo de lectura (Query)
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
@@ -179,5 +177,7 @@ sequenceDiagram
 ```
 
 **Resumen mental:** pedir datos -> convertir a query -> buscar en lectura -> adaptar a DTO -> responder.
+
+
 
 

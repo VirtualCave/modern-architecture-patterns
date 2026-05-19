@@ -1,12 +1,10 @@
 # Hybrid Tutorial
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Idea](#idea)
 - [Puerto](#puerto)
 - [Flujo alto nivel](#flujo-alto-nivel)
-
-Proyecto combinado que mezcla **Hexagonal Architecture + CQRS + DDD** en un mismo módulo.
 
 ## Idea
 
@@ -52,5 +50,7 @@ flowchart TD
     class F port;
     class G,H,I infra;
 ```
+
+
 
 

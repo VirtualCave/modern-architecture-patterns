@@ -1,18 +1,18 @@
 # Ejemplos de anti-patrones frecuentes en arquitecturas modernas y cómo evitarlos.
 
-## Indice de contenidos
+## Índice de contenidos
 
-- [Cómo leer esta guía](#como-leer-esta-guia)
-- [1. Anemic Domain Model — transversal / DDD](#1-anemic-domain-model-transversal-ddd)
-- [2. Leaking Abstraction — transversal / Hexagonal](#2-leaking-abstraction-transversal-hexagonal)
-- [3. Command como Query disfrazada — CQRS](#3-command-como-query-disfrazada-cqrs)
-- [4. God Service — transversal](#4-god-service-transversal)
-- [5. Primitive Obsession — transversal / DDD](#5-primitive-obsession-transversal-ddd)
-- [6. Database-Driven Design — transversal](#6-database-driven-design-transversal)
-- [7. No proteger invariantes — DDD](#7-no-proteger-invariantes-ddd)
-- [8. Exponer entidades de persistencia — transversal / Hexagonal](#8-exponer-entidades-de-persistencia-transversal-hexagonal)
-- [9. Mezclar bounded contexts — DDD](#9-mezclar-bounded-contexts-ddd)
-- [10. No usar Value Objects — DDD](#10-no-usar-value-objects-ddd)
+- [Cómo leer esta guía](#cómo-leer-esta-guía)
+- [Anemic Domain Model](#anemic-domain-model)
+- [Leaking Abstraction](#leaking-abstraction)
+- [Command como Query disfrazada](#command-como-query-disfrazada)
+- [God Service](#god-service)
+- [Primitive Obsession](#primitive-obsession)
+- [Database-Driven Design](#database-driven-design)
+- [No proteger invariantes](#no-proteger-invariantes)
+- [Exponer entidades de persistencia](#exponer-entidades-de-persistencia)
+- [Mezclar bounded contexts](#mezclar-bounded-contexts)
+- [No usar Value Objects](#no-usar-value-objects)
 - [Resumen](#resumen)
 - [Referencias](#referencias)
 
@@ -32,7 +32,9 @@ No todos los anti-patrones aparecen en todas las arquitecturas. Algunos son **tr
 
 ---
 
-## 1. Anemic Domain Model — transversal / DDD
+## Anemic Domain Model
+
+**Ámbito:** Transversal / DDD
 
 ### Descripción
 
@@ -125,7 +127,9 @@ public class OrderService {
 
 ---
 
-## 2. Leaking Abstraction — transversal / Hexagonal
+## Leaking Abstraction
+
+**Ámbito:** Transversal / Hexagonal
 
 ### Descripción
 
@@ -205,7 +209,9 @@ public interface OrderPersistenceMapper {
 
 ---
 
-## 3. Command como Query disfrazada — CQRS
+## Command como Query disfrazada
+
+**Ámbito:** CQRS
 
 ### Descripción
 
@@ -286,7 +292,9 @@ public class ProductController {
 
 ---
 
-## 4. God Service — transversal
+## God Service
+
+**Ámbito:** Transversal
 
 ### Descripción
 
@@ -405,7 +413,9 @@ public class OrderEmailHandler {
 
 ---
 
-## 5. Primitive Obsession — transversal / DDD
+## Primitive Obsession
+
+**Ámbito:** Transversal / DDD
 
 ### Descripción
 
@@ -516,7 +526,9 @@ public void transfer(AccountId from, AccountId to, Money amount) {
 
 ---
 
-## 6. Database-Driven Design — transversal
+## Database-Driven Design
+
+**Ámbito:** Transversal
 
 ### Descripción
 
@@ -594,7 +606,9 @@ public class OrderEntity {
 
 ---
 
-## 7. No proteger invariantes — DDD
+## No proteger invariantes
+
+**Ámbito:** DDD
 
 ### Descripción
 
@@ -677,7 +691,9 @@ public class AccountService {
 
 ---
 
-## 8. Exponer entidades de persistencia — transversal / Hexagonal
+## Exponer entidades de persistencia
+
+**Ámbito:** Transversal / Hexagonal
 
 ### Descripción
 
@@ -736,7 +752,9 @@ public class ProductController {
 
 ---
 
-## 9. Mezclar bounded contexts — DDD
+## Mezclar bounded contexts
+
+**Ámbito:** DDD
 
 ### Descripción
 
@@ -800,7 +818,9 @@ public class CustomerIntegrationService {
 
 ---
 
-## 10. No usar Value Objects — DDD
+## No usar Value Objects
+
+**Ámbito:** DDD
 
 ### Descripción
 
@@ -874,4 +894,6 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 
 - Definiciones de conceptos
 - Guía unificada de errores, soluciones y troubleshooting
+
+
 

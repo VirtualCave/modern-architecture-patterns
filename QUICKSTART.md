@@ -1,29 +1,17 @@
 # Quick Start Guide
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Estructura del repo](#estructura-del-repo)
-- [Ejecutar cada módulo](#ejecutar-cada-modulo)
-- [Tecnologías usadas](#tecnologias-usadas)
-- [Ejecutar Todos los Módulos](#ejecutar-todos-los-modulos)
-- [Probar Cada Módulo](#probar-cada-modulo)
+- [Ejecutar cada módulo](#ejecutar-cada-módulo)
+- [Tecnologías usadas](#tecnologías-usadas)
+- [Ejecutar Todos los Módulos](#ejecutar-todos-los-módulos)
+- [Probar Cada Módulo](#probar-cada-módulo)
 - [Ejecutar Tests](#ejecutar-tests)
 - [Acceder a la Base de Datos H2](#acceder-a-la-base-de-datos-h2)
-- [Estructura de Cada Módulo](#estructura-de-cada-modulo)
+- [Estructura de Cada Módulo](#estructura-de-cada-módulo)
 - [Siguientes Pasos](#siguientes-pasos)
 - [Problemas Comunes](#problemas-comunes)
-- [Recursos Adicionales](#recursos-adicionales)
-- [¿Necesitas Ayuda?](#necesitas-ayuda)
-
-Guía rápida para empezar a usar el tutorial de arquitecturas modernas.
-
-Este repositorio contiene **cuatro proyectos Maven independientes** con ejemplos prácticos de arquitecturas modernas usando **Java 26** y **Spring Boot 4**.
-
-La idea no es solo mostrar “cómo se organiza el código”, sino **por qué** cada arquitectura resuelve un problema distinto:
-
-- **Hexagonal**: aislar el dominio de los detalles técnicos.
-- **CQRS**: separar claramente escritura y lectura.
-- **DDD**: modelar el negocio con lenguaje y reglas del dominio.
 
 ## Estructura del repo
 
@@ -396,24 +384,5 @@ mvn clean install
 ### Tests fallan
 Asegúrate de que no haya otra instancia corriendo en el mismo puerto.
 
----
 
-## Recursos Adicionales
-
-- Plan completo de mejoras de documentación
-- Diccionario de conceptos
-- Anti-patrones comunes
-- Guía de errores comunes y troubleshooting
-- Ejercicios prácticos
-- Roadmap de aprendizaje
-
----
-
-## ¿Necesitas Ayuda?
-
-Si encuentras algún problema:
-1. Revisa la guía de errores comunes
-2. Consulta el glosario para entender los conceptos
-3. Revisa la documentación de cada módulo
-4. Abre un issue en el repositorio
 

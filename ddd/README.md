@@ -1,6 +1,6 @@
 # DDD Tutorial
 
-## Indice de contenidos
+## Índice de contenidos
 
 - [Idea principal (en sencillo)](#idea-principal-en-sencillo)
 - [Bounded Contexts de este módulo](#bounded-contexts-de-este-módulo)
@@ -9,8 +9,6 @@
 - [Diagrama de Secuencia: Abrir Cuenta](#diagrama-de-secuencia-abrir-cuenta)
 - [Diagrama de Secuencia: Transferir Dinero](#diagrama-de-secuencia-transferir-dinero)
 - [Diagrama de Estado: Ciclo de Vida de una Cuenta](#diagrama-de-estado-ciclo-de-vida-de-una-cuenta)
-
-Ejemplo práctico de **Domain-Driven Design (DDD)** con dominio bancario.
 
 ## Idea principal (en sencillo)
 
@@ -51,7 +49,7 @@ Cada contexto sigue la misma estructura: `domain -> application -> infrastructur
 
 ## Flujo visual
 
-### 1) Abrir cuenta
+### Abrir cuenta
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
@@ -78,7 +76,7 @@ flowchart TD
     class F,G infra;
 ```
 
-### 2) Transferir dinero
+### Transferir dinero
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
@@ -235,5 +233,7 @@ stateDiagram-v2
         No hay más operaciones
     end note
 ```
+
+
 
 
