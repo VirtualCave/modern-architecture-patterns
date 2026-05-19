@@ -1,5 +1,14 @@
 # Hexagonal Tutorial
 
+## Indice de contenidos
+
+- [Idea principal (en sencillo)](#idea-principal-en-sencillo)
+- [Conceptos clave en este módulo](#conceptos-clave-en-este-modulo)
+- [Flujo visual](#flujo-visual)
+- [Diagrama de Secuencia: Crear Pedido](#diagrama-de-secuencia-crear-pedido)
+- [Diagrama de Secuencia: Cambiar Estado](#diagrama-de-secuencia-cambiar-estado)
+- [Diagrama de Estado: Ciclo de Vida de un Pedido](#diagrama-de-estado-ciclo-de-vida-de-un-pedido)
+
 Ejemplo práctico de **Arquitectura Hexagonal (Ports and Adapters)** con dominio de pedidos.
 
 ## Idea principal (en sencillo)
@@ -30,13 +39,6 @@ La app se construye alrededor del **dominio** (`Order`), no alrededor de Spring 
   - Mapper persistencia: `infrastructure/adapter/output/persistence/mapper/OrderPersistenceMapper`
   - Los mapeos viven en infraestructura para no contaminar el dominio.
 
-## Leyenda de colores
-
-- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
-- `app`: servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
-- `domain`: aggregates y reglas de dominio (`fill: #FEF3C7`, `stroke: #D97706`)
-- `port`: puertos de entrada/salida (`fill: #F3E8FF`, `stroke: #7E22CE`)
-- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## Flujo visual
 
@@ -221,4 +223,5 @@ stateDiagram-v2
         No hay más transiciones
     end note
 ```
+
 

@@ -1,5 +1,15 @@
 # DDD Tutorial
 
+## Indice de contenidos
+
+- [Idea principal (en sencillo)](#idea-principal-en-sencillo)
+- [Bounded Contexts de este módulo](#bounded-contexts-de-este-módulo)
+- [Conceptos clave en este módulo](#conceptos-clave-en-este-módulo)
+- [Flujo visual](#flujo-visual)
+- [Diagrama de Secuencia: Abrir Cuenta](#diagrama-de-secuencia-abrir-cuenta)
+- [Diagrama de Secuencia: Transferir Dinero](#diagrama-de-secuencia-transferir-dinero)
+- [Diagrama de Estado: Ciclo de Vida de una Cuenta](#diagrama-de-estado-ciclo-de-vida-de-una-cuenta)
+
 Ejemplo práctico de **Domain-Driven Design (DDD)** con dominio bancario.
 
 ## Idea principal (en sencillo)
@@ -38,13 +48,6 @@ Cada contexto sigue la misma estructura: `domain -> application -> infrastructur
   - Contexto `customer`: `customer/infrastructure/persistence/mapper/CustomerPersistenceMapper`
   - Se usa en infraestructura para mapear dominio <-> entidad sin romper el modelo de dominio.
 
-## Leyenda de colores
-
-- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
-- `app`: servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
-- `domain`: aggregates, value objects y reglas (`fill: #FEF3C7`, `stroke: #D97706`)
-- `port`: repositorios/puertos del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
-- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## Flujo visual
 
@@ -232,4 +235,5 @@ stateDiagram-v2
         No hay más operaciones
     end note
 ```
+
 

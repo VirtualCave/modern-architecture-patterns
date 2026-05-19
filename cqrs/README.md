@@ -1,5 +1,13 @@
 # CQRS Tutorial
 
+## Indice de contenidos
+
+- [Idea principal (en sencillo)](#idea-principal-en-sencillo)
+- [Conceptos clave en este módulo](#conceptos-clave-en-este-módulo)
+- [Flujo visual](#flujo-visual)
+- [Diagrama de Secuencia: Command (Crear Producto)](#diagrama-de-secuencia-command-crear-producto)
+- [Diagrama de Secuencia: Query (Listar Productos)](#diagrama-de-secuencia-query-listar-productos)
+
 Ejemplo práctico de **CQRS (Command Query Responsibility Segregation)** con catálogo de productos.
 
 ## Idea principal (en sencillo)
@@ -29,15 +37,6 @@ Así evitas mezclar reglas de negocio de escritura con necesidades de consulta.
   - Mapper único de persistencia: `infrastructure/persistence/mapper/ProductPersistenceMapper`
   - Centraliza conversiones entre `Product` (write model), `ProductEntity` y `ProductView` (read model).
 
-## Leyenda de colores
-
-- `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
-- `bus`: `CommandBus` y `QueryBus` (`fill: #E0E7FF`, `stroke: #3730A3`)
-- `app`: handlers y servicios de aplicación (`fill: #DCFCE7`, `stroke: #15803D`)
-- `domain`: write model (`fill: #FEF3C7`, `stroke: #D97706`)
-- `read`: read model (`fill: #CCFBF1`, `stroke: #0F766E`)
-- `port`: interfaces/repositorios del dominio (`fill: #F3E8FF`, `stroke: #7E22CE`)
-- `infra`: adaptadores e infraestructura (`fill: #FFEDD5`, `stroke: #C2410C`)
 
 ## Flujo visual
 
@@ -180,4 +179,5 @@ sequenceDiagram
 ```
 
 **Resumen mental:** pedir datos -> convertir a query -> buscar en lectura -> adaptar a DTO -> responder.
+
 

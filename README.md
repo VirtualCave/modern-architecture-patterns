@@ -1,5 +1,16 @@
 # Tutorial de Arquitecturas Modernas: Hexagonal, CQRS, DDD y Hybrid
 
+## Indice de contenidos
+
+- [Leyenda para diagramas](#leyenda-para-diagramas)
+- [1) Hexagonal Architecture](#1-hexagonal-architecture)
+- [2) CQRS](#2-cqrs)
+- [3) DDD](#3-ddd)
+- [Cuándo mezclar arquitecturas](#cuando-mezclar-arquitecturas)
+- [Regla práctica para elegir](#regla-practica-para-elegir)
+- [APIs de ejemplo](#apis-de-ejemplo)
+- [Diagramas de Arquitectura](#diagramas-de-arquitectura)
+
 ## Leyenda para diagramas
 
 - `entry`: entrada HTTP/controladores (`fill: #DBEAFE`, `stroke: #1D4ED8`)
@@ -630,5 +641,6 @@ flowchart TD
     class D,F read;
     class G infra;
 ```
+
 
 

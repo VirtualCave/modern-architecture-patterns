@@ -1,5 +1,21 @@
 # Ejemplos de anti-patrones frecuentes en arquitecturas modernas y cómo evitarlos.
 
+## Indice de contenidos
+
+- [Cómo leer esta guía](#como-leer-esta-guia)
+- [1. Anemic Domain Model — transversal / DDD](#1-anemic-domain-model-transversal-ddd)
+- [2. Leaking Abstraction — transversal / Hexagonal](#2-leaking-abstraction-transversal-hexagonal)
+- [3. Command como Query disfrazada — CQRS](#3-command-como-query-disfrazada-cqrs)
+- [4. God Service — transversal](#4-god-service-transversal)
+- [5. Primitive Obsession — transversal / DDD](#5-primitive-obsession-transversal-ddd)
+- [6. Database-Driven Design — transversal](#6-database-driven-design-transversal)
+- [7. No proteger invariantes — DDD](#7-no-proteger-invariantes-ddd)
+- [8. Exponer entidades de persistencia — transversal / Hexagonal](#8-exponer-entidades-de-persistencia-transversal-hexagonal)
+- [9. Mezclar bounded contexts — DDD](#9-mezclar-bounded-contexts-ddd)
+- [10. No usar Value Objects — DDD](#10-no-usar-value-objects-ddd)
+- [Resumen](#resumen)
+- [Referencias](#referencias)
+
 ## Cómo leer esta guía
 
 No todos los anti-patrones aparecen en todas las arquitecturas. Algunos son **transversales** y pueden aparecer en cualquier proyecto moderno; otros son más típicos de una arquitectura concreta, sobre todo **CQRS** o **DDD**.
@@ -858,3 +874,4 @@ public void createOrder(OrderId orderId, Money total, Email email) {
 
 - Definiciones de conceptos
 - Guía unificada de errores, soluciones y troubleshooting
+

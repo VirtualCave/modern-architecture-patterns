@@ -1,5 +1,25 @@
 # Errores frecuentes al implementar arquitecturas modernas y cómo solucionarlos.
 
+## Indice de contenidos
+
+- [1. Poner lógica de negocio en el controlador](#1-poner-logica-de-negocio-en-el-controlador)
+- [2. No proteger invariantes en el aggregate](#2-no-proteger-invariantes-en-el-aggregate)
+- [3. Mezclar concerns de lectura y escritura](#3-mezclar-concerns-de-lectura-y-escritura)
+- [4. Exponer entidades de persistencia](#4-exponer-entidades-de-persistencia)
+- [5. No usar Value Objects](#5-no-usar-value-objects)
+- [6. El dominio no se guarda correctamente](#6-el-dominio-no-se-guarda-correctamente)
+- [7. CQRS: El read model no se actualiza](#7-cqrs-el-read-model-no-se-actualiza)
+- [8. El dominio depende de Spring](#8-el-dominio-depende-de-spring)
+- [9. DDD: Bounded contexts mezclados](#9-ddd-bounded-contexts-mezclados)
+- [10. No validar en el constructor](#10-no-validar-en-el-constructor)
+- [11. Errores de mapeo (MapStruct)](#11-errores-de-mapeo-mapstruct)
+- [12. Errores de transacción](#12-errores-de-transaccion)
+- [13. Errores de testing](#13-errores-de-testing)
+- [14. Problemas de configuración y arranque](#14-problemas-de-configuracion-y-arranque)
+- [15. Diagnóstico rápido general](#15-diagnostico-rapido-general)
+- [Resumen](#resumen)
+- [Referencias](#referencias)
+
 ---
 
 ## 1. Poner lógica de negocio en el controlador
@@ -1050,3 +1070,4 @@ void shouldMapOrderToEntity() {
 - Definiciones de conceptos
 - Anti-patrones con ejemplos
 - Guía histórica de troubleshooting, ahora unificada aquí
+
