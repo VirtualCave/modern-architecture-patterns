@@ -8,7 +8,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Tests del agregado Order – DOMINIO PURO.
+ * Tests de la entidad Order – DOMINIO PURO.
  *
  * Estos tests son rapidísimos: no usan Spring, ni BD, ni red.
  * Son tests unitarios que verifican las reglas de negocio del dominio.
@@ -34,25 +34,12 @@ class OrderTest {
     }
 
     @Test
-    void create_debeGenerarEventoOrderCreated() {
-        var order = crearPedidoEjemplo();
-        var events = order.pullDomainEvents();
-
-        assertThat(events).hasSize(1);
-        assertThat(events.getFirst()).isInstanceOf(
-                com.tutorial.hexagonal.domain.event.OrderEvent.OrderCreated.class
-        );
-    }
-
-    @Test
     void confirm_debeTransicionarDePendingAConfirmed() {
         var order = crearPedidoEjemplo();
-        order.pullDomainEvents(); // limpiar evento de creación
 
         order.confirm();
 
         assertThat(order.status()).isEqualTo(OrderStatus.CONFIRMED);
-        assertThat(order.pullDomainEvents()).hasSize(1);
     }
 
     @Test

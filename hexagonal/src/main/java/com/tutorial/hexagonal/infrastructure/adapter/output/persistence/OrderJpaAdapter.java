@@ -15,9 +15,13 @@ import java.util.Optional;
  * Implementa OrderRepository (puerto de salida del dominio).
  * El dominio no sabe que esto existe: solo ve la interfaz OrderRepository.
  *
- * Responsabilidades:
- *   - Convertir Order (dominio) → OrderEntity (JPA) para guardar
- *   - Convertir OrderEntity (JPA) → Order (dominio) al leer
+ * Esta clase es la "capa anticorrupción" de la infraestructura:
+ *   - Convierte Order (dominio) → OrderEntity (JPA) para guardar
+ *   - Convierte OrderEntity (JPA) → Order (dominio) al leer
+ *
+ * Si mañana migramos de JPA a MongoDB, solo se reescribe esta clase.
+ * El dominio (Order, OrderRepository) no cambia nada.
+ * Esa es la promesa central de la arquitectura hexagonal.
  */
 @RequiredArgsConstructor
 public class OrderJpaAdapter implements OrderRepository {
@@ -50,11 +54,6 @@ public class OrderJpaAdapter implements OrderRepository {
         return jpaRepository.findAll().stream()
                 .map(mapper::toDomain)
                 .toList();
-    }
-
-    @Override
-    public void deleteById(OrderId id) {
-        jpaRepository.deleteById(id.value());
     }
 
 }

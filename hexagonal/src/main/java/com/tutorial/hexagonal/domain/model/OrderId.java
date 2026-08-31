@@ -3,12 +3,11 @@ package com.tutorial.hexagonal.domain.model;
 import java.math.BigDecimal;
 
 /**
- * Value Object: OrderId
+ * Identificador del pedido.
  *
  * Java 26 - Record: inmutable por diseño, equals/hashCode/toString automáticos.
- * En DDD, un Value Object se define por sus atributos, no por identidad.
- *
- * Usamos un record con validación en el constructor compacto.
+ * Usar un tipo propio para el ID (en lugar de String suelto) evita confusiones
+ * y permite validar el formato en un único lugar.
  */
 public record OrderId(String value) {
 

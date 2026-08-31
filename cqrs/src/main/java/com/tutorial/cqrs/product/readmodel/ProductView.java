@@ -15,6 +15,10 @@ import java.time.LocalDateTime;
  *  - Puede estar en caché
  *  - Puede estar en una BD diferente (eventualmente consistente)
  *
+ * En este tutorial usamos la misma BD H2 para simplificar.
+ * En producción, el read model podría estar en Redis, Elasticsearch, etc.,
+ * y actualizarse de forma asíncrona cuando se ejecutan comandos.
+ *
  * Aquí usamos un record de Java 26: inmutable, perfecto para datos de lectura.
  */
 public record ProductView(

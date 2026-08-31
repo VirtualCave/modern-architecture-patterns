@@ -7,7 +7,7 @@
 - [Antipatrones](#antipatrones)
 - [Comparativas](#comparativas)
 - [Patrones Relacionados](#patrones-relacionados)
-- [Acronyms](#acronyms)
+- [Acrónimos](#acronyms)
 - [Referencias Cruzadas](#referencias-cruzadas)
 
 ## Arquitecturales
@@ -16,7 +16,7 @@
 
 **Definición**: Entidad que actúa como punto de entrada a un aggregate y garantiza la consistencia de sus invariantes.
 
-**Ejemplo**: `Order` en el módulo hexagonal protege que no se cancele un pedido ya entregado.
+**Ejemplo**: `Account` en el módulo `ddd` es el aggregate root del contexto bancario. Protege invariantes como no poder retirar más saldo del disponible o no transferir a la misma cuenta.
 
 **Por qué importa**: Es el único objeto del aggregate que puede ser cargado/salvado desde el repositorio. Todas las operaciones externas deben pasar por él.
 
@@ -30,7 +30,7 @@
 
 **Definición**: Cluster de objetos de dominio que se tratan como una unidad para garantizar la consistencia de datos.
 
-**Ejemplo**: Un `Order` aggregate contiene `Order` (root) + `OrderItem` (entidad) + `Money` (value object).
+**Ejemplo**: El aggregate `Account` en el módulo `ddd` contiene `Account` (root) y usa `Money` (value object) para todo lo monetario.
 
 **Por qué importa**: Los cambios dentro de un aggregate deben ser atómicos. No puedes modificar parte de un aggregate sin garantizar su consistencia completa.
 
@@ -81,9 +81,9 @@
 **Por qué importa**: Permite cambiar la tecnología sin afectar el dominio. Puedes cambiar de JPA a MongoDB solo cambiando el adapter.
 
 **Ejemplos**: 
-- `OrderJpaAdapter` implementa persistencia con JPA
-- `OrderController` implementa acceso HTTP REST
-- `LogOrderEventPublisher` implementa publicación de eventos a logs
+- `OrderJpaAdapter` implementa persistencia con JPA (módulo `hexagonal`)
+- `OrderController` implementa acceso HTTP REST (módulo `hexagonal`)
+- `ProductWriteRepositoryAdapter` implementa persistencia de escritura (módulo `cqrs`)
 
 **Ver también**: Port, Hexagonal Architecture
 
@@ -311,14 +311,23 @@ public class Account {
 
 **Ejemplo**:
 ```java
+// Módulo hexagonal: carga → lógica de dominio → guarda
 @Service
 public class CreateOrderService implements CreateOrderUseCase {
-    public Order create(CreateOrderCommand cmd) {
-        Customer customer = customerRepository.findById(cmd.getCustomerId());
-        Order order = Order.create(customer, cmd.getItems()); // Lógica en dominio
-        orderRepository.save(order);
-        eventPublisher.publish(order.pullDomainEvents());
-        return order;
+    public Order createOrder(String customerId, List<OrderItem> items) {
+        var orderId = OrderId.generate();
+        var order = Order.create(orderId, customerId, items); // Lógica en dominio
+        return orderRepository.save(order);
+    }
+}
+
+// Módulo ddd: carga → lógica de dominio → guarda → publica eventos
+@Service
+public class AccountApplicationService {
+    public Account deposit(DepositMoneyInput input) {
+        var account = repository.findById(AccountId.of(input.accountId())).orElseThrow();
+        account.deposit(new Money(input.amount(), "EUR")); // Lógica en dominio
+        return repository.save(account);
     }
 }
 ```
@@ -447,132 +456,57 @@ public class CreateOrderService implements CreateOrderUseCase {
 
 ---
 
+### Use Case (Input Port)
+
+**Definición**: Interfaz que define una operación que el dominio ofrece al mundo exterior.
+
+**Características**:
+- Vive en el dominio (`domain/port/input`)
+- Define el contrato sin implementación
+- Representa una intención clara del exterior hacia el sistema
+
+**Ejemplo**: `CreateOrderUseCase`, `GetOrderUseCase`, `UpdateOrderStatusUseCase` en el módulo `hexagonal`.
+
+**Por qué importa**: Hace explícito qué puede hacer el sistema. El controlador solo conoce el use case, no la implementación concreta.
+
+**Ver también**: Application Service, Port, Input Adapter
+
+---
+
+### Input (DDD Application Layer)
+
+**Definición**: DTO simple que transporta datos desde la capa de infraestructura hacia el servicio de aplicación en el módulo DDD.
+
+**Características**:
+- Sin lógica de negocio
+- Sin dependencia de frameworks
+- Solo transporta datos
+
+**Diferencia con Command (CQRS)**: Un `Command` en CQRS viaja a través de un `CommandBus` hacia un `CommandHandler` específico. Un `Input` en DDD es simplemente un parámetro tipado que recibe el `ApplicationService` directamente, sin bus.
+
+**Ejemplo en este proyecto**: `OpenAccountInput`, `DepositMoneyInput`, `TransferMoneyInput` en el módulo `ddd`.
+
+**Ver también**: Command (CQRS), Application Service, DTO
+
+---
+
 ## Antipatrones
 
-### Anemic Domain Model
+> Para ejemplos detallados con código, comparativas y cómo evitar cada antipatrón, consulta el fichero `ANTI_PATRONES.md` de esta misma carpeta.
 
-**Definición**: Modelo de dominio sin comportamiento, solo getters/setters.
+| Antipatrón | Ámbito | Problema |
+|------------|--------|----------|
+| Anemic Domain Model | Transversal / DDD | Lógica dispersa en servicios; el dominio es solo un contenedor de datos |
+| Leaking Abstraction | Transversal / Hexagonal | El dominio depende de tecnología (JPA, Spring) |
+| Command como Query | CQRS | Un command devuelve datos de lectura |
+| God Service | Transversal | Un servicio hace demasiado, violando SRP |
+| Primitive Obsession | Transversal / DDD | Uso de `String`/`int` donde debería haber Value Objects |
+| Database-Driven Design | Transversal | Se diseña la BD antes que el dominio |
+| No proteger invariantes | DDD | El aggregate permite estados inválidos |
+| Exponer entidades JPA | Transversal / Hexagonal | La API expone directamente entidades de persistencia |
+| Mezclar bounded contexts | DDD | Un contexto depende de objetos de otro contexto |
+| No usar Value Objects | DDD | Conceptos de dominio representados con primitivos |
 
-**Por qué es malo**: La lógica de negocio se dispersa en servicios, perdiendo las ventajas de DDD. El modelo se convierte en un contenedor de datos.
-
-**Ejemplo**:
-```java
-// ❌ MAL - Modelo anémico
-public class Order {
-    private OrderStatus status;
-    
-    public void setStatus(OrderStatus status) {
-        this.status = status; // No valida transiciones
-    }
-}
-
-// ✅ BIEN - Modelo rico
-public class Order {
-    private OrderStatus status;
-    
-    public void confirm() {
-        if (status != OrderStatus.PENDING) {
-            throw new IllegalStateException("Solo se pueden confirmar pedidos pendientes");
-        }
-        this.status = OrderStatus.CONFIRMED;
-    }
-}
-```
-
-**Cómo evitar**: Poner lógica en aggregates y value objects. Usar métodos que expresan intención, no setters genéricos.
-
-**Ver también**: Rich Domain Model, Behavior
-
----
-
-### God Service
-
-**Definición**: Servicio que hace demasiado, violando Single Responsibility Principle.
-
-**Por qué es malo**: Difícil de mantener, probar y entender. Un cambio puede afectar múltiples responsabilidades.
-
-**Ejemplo**: Un `OrderService` que maneja creación, validación, persistencia, envío de emails, actualización de inventario, etc.
-
-**Cómo evitar**: Dividir en servicios específicos por responsabilidad. Usar Application Services para orquestación, Domain Services para lógica de dominio.
-
-**Ver también**: Single Responsibility Principle, Service Decomposition
-
----
-
-### Database-Driven Design
-
-**Definición**: Diseñar el software pensando primero en tablas y relaciones.
-
-**Por qué es malo**: El código refleja la BD, no el negocio. Difícil de entender para no técnicos. Cambios en la BD afectan el código.
-
-**Ejemplo**: Empezar diseñando tablas SQL y luego crear entidades JPA basadas en esas tablas.
-
-**Cómo evitar**: Modelar primero el dominio con DDD, luego diseñar la persistencia como un detalle técnico.
-
-**Ver también**: Domain-Driven Design, Model-First
-
----
-
-### Leaking Abstraction
-
-**Definición**: Cuando detalles de implementación se filtran a capas superiores.
-
-**Ejemplo**: El dominio depende de anotaciones JPA o el controlador devuelve entidades JPA.
-
-**Por qué es malo**: Rompe el aislamiento de capas. Difícil de cambiar la tecnología sin afectar el dominio.
-
-**Ejemplo**:
-```java
-// ❌ MAL - Dominio con JPA
-@Entity
-public class Order {
-    @OneToMany
-    private List<OrderItem> items;
-}
-
-// ✅ BIEN - Dominio puro
-public class Order {
-    private List<OrderItem> items;
-}
-
-// La anotación JPA está en la entidad de persistencia
-@Entity
-public class OrderEntity {
-    @OneToMany
-    private List<OrderItemEntity> items;
-}
-```
-
-**Cómo evitar**: Usar puertos/adaptadores, mappers. Mantener el dominio libre de dependencias técnicas.
-
-**Ver también**: Hexagonal Architecture, Dependency Inversion
-
----
-
-### Primitive Obsession
-
-**Definición**: Uso excesivo de tipos primitivos (String, int, long) en lugar de tipos de dominio.
-
-**Por qué es malo**: Pierdes validación, semántica y comportamiento. El código es más propenso a errores.
-
-**Ejemplo**:
-```java
-// ❌ MAL - Primitive Obsession
-public void transfer(String fromAccountId, String toAccountId, BigDecimal amount) {
-    // ¿Es un ID válido? ¿Es amount positivo? ¿Misma moneda?
-}
-
-// ✅ BIEN - Tipos de dominio
-public void transfer(AccountId from, AccountId to, Money amount) {
-    // Los tipos ya validan y encapsulan comportamiento
-}
-```
-
-**Cómo evitar**: Crear Value Objects para conceptos de dominio (AccountId, Money, Email, etc.).
-
-**Ver también**: Value Object, Type Safety, Domain Modeling
-
----
 
 ## Comparativas
 
@@ -678,7 +612,7 @@ public void transfer(AccountId from, AccountId to, Money amount) {
 
 ---
 
-## Acronyms
+## Acrónimos
 
 - **CQRS**: Command Query Responsibility Segregation
 - **DDD**: Domain-Driven Design
@@ -695,19 +629,16 @@ public void transfer(AccountId from, AccountId to, Money amount) {
 ## Referencias Cruzadas
 
 **Para entender arquitecturas**:
-- Hexagonal → Port, Adapter, Aggregate Root
-- CQRS → Command, Query, Write Model, Read Model
-- DDD → Bounded Context, Ubiquitous Language, Domain Event
+- Hexagonal → Port, Adapter, Use Case, Application Service
+- CQRS → Command, Query, Write Model, Read Model, CommandBus, QueryBus
+- DDD → Bounded Context, Ubiquitous Language, Domain Event, Domain Service, Invariant
 
-**Para evitar errores**:
-- Anemic Domain Model → Rich Domain Model, Behavior
-- Leaking Abstraction → Hexagonal Architecture, Port
-- Primitive Obsession → Value Object
+**Para evitar errores** → ver `ERRORES_COMUNES.md` en esta misma carpeta
+
+**Para evitar antipatrones** → ver `ANTI_PATRONES.md` en esta misma carpeta
 
 **Para implementar**:
-- Application Service → Domain Service, Repository
+- Application Service → Domain Service, Repository, Use Case
 - Mapper → DTO, Entity, Domain Model
-- Event Publisher → Domain Event, Event Handler
-
-
+- Input (DDD) vs Command (CQRS) → Application Service
 

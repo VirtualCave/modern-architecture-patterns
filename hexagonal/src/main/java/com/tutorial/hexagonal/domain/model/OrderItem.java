@@ -1,7 +1,7 @@
 package com.tutorial.hexagonal.domain.model;
 
 /**
- * Value Object: OrderItem (línea de un pedido)
+ * Línea de un pedido.
  *
  * Record de Java 26: inmutable, compacto.
  * Nota: en Hexagonal Architecture, este record no tiene anotaciones JPA.

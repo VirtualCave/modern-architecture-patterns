@@ -1,22 +1,19 @@
 package com.tutorial.hexagonal.domain.model;
 
-import com.tutorial.hexagonal.domain.event.OrderEvent;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * AGGREGATE ROOT: Order
+ * ENTIDAD DE DOMINIO: Order
  *
  * La clase más importante del módulo hexagonal.
  * Reglas clave en Arquitectura Hexagonal:
  *
  * 1. NO hay imports de Spring, JPA ni ningún framework aquí.
- * 2. El Aggregate encapsula TODAS las reglas de negocio relacionadas con un pedido.
+ * 2. Order encapsula TODAS las reglas de negocio relacionadas con un pedido.
  * 3. El estado interno solo cambia a través de los métodos de esta clase.
- * 4. Los eventos de dominio se acumulan para ser despachados por la capa de application.
  *
  * Patrón: Constructor privado + factory method estático para controlar la creación.
  */
@@ -29,12 +26,7 @@ public final class Order {
     private final Money totalAmount;
     private final LocalDateTime createdAt;
 
-    // Los eventos generados se acumulan aquí y se limpian al ser publicados
-    private final List<OrderEvent> domainEvents = new ArrayList<>();
-
-    // -----------------------------------------------------------------
     // Constructor privado: nadie puede crear un Order sin pasar por create()
-    // -----------------------------------------------------------------
     private Order(OrderId id, String customerId, List<OrderItem> items) {
         this.id = id;
         this.customerId = customerId;
@@ -46,7 +38,6 @@ public final class Order {
 
     /**
      * Factory method: única forma de crear un pedido nuevo.
-     * Publica el evento OrderCreated automáticamente.
      */
     public static Order create(OrderId id, String customerId, List<OrderItem> items) {
         if (customerId == null || customerId.isBlank())
@@ -54,21 +45,15 @@ public final class Order {
         if (items == null || items.isEmpty())
             throw new IllegalArgumentException("El pedido debe tener al menos un ítem");
 
-        var order = new Order(id, customerId, items);
-        // Registramos el evento de dominio
-        order.domainEvents.add(new OrderEvent.OrderCreated(id.value(), customerId, order.totalAmount));
-        return order;
+        return new Order(id, customerId, items);
     }
 
     /**
-     * Factory method para reconstruir desde persistencia (sin generar evento).
+     * Factory method para reconstruir desde persistencia.
      */
     public static Order reconstitute(OrderId id, String customerId,
                                      List<OrderItem> items, OrderStatus status,
                                      LocalDateTime createdAt) {
-        var order = new Order(id, customerId, items);
-        // No podemos setear status/createdAt directamente (campo final en constructor)
-        // así que usamos un constructor alternativo interno
         return new Order(id, customerId, items, status, createdAt);
     }
 
@@ -88,22 +73,18 @@ public final class Order {
 
     public void confirm() {
         transitionTo(OrderStatus.CONFIRMED);
-        domainEvents.add(new OrderEvent.OrderConfirmed(id.value()));
     }
 
     public void ship() {
         transitionTo(OrderStatus.SHIPPED);
-        domainEvents.add(new OrderEvent.OrderShipped(id.value()));
     }
 
     public void deliver() {
         transitionTo(OrderStatus.DELIVERED);
-        domainEvents.add(new OrderEvent.OrderDelivered(id.value()));
     }
 
     public void cancel(String reason) {
         transitionTo(OrderStatus.CANCELLED);
-        domainEvents.add(new OrderEvent.OrderCancelled(id.value(), reason));
     }
 
     /** Valida la transición usando las reglas del enum */
@@ -124,17 +105,6 @@ public final class Order {
         return items.stream()
                 .map(OrderItem::subtotal)
                 .reduce(Money.ZERO, Money::add);
-    }
-
-    // -----------------------------------------------------------------
-    // Eventos de dominio
-    // -----------------------------------------------------------------
-
-    /** Devuelve copia inmutable de los eventos pendientes */
-    public List<OrderEvent> pullDomainEvents() {
-        var events = List.copyOf(domainEvents);
-        domainEvents.clear();
-        return events;
     }
 
     // -----------------------------------------------------------------

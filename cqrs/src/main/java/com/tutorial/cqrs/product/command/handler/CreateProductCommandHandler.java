@@ -8,6 +8,19 @@ import com.tutorial.cqrs.shared.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * COMMAND HANDLER: CreateProductCommandHandler
+ *
+ * En CQRS, cada comando tiene su propio handler con una responsabilidad única.
+ * Compara con la arquitectura hexagonal: allí teníamos un Use Case + Application Service.
+ * Aquí el handler ES el "caso de uso" de escritura, sin intermediario adicional.
+ *
+ * ¿Por qué no un servicio genérico ProductService con todos los métodos?
+ * Porque cada handler puede evolucionar, testarse y desplegarse de forma independiente.
+ * Añadir una nueva operación = añadir un nuevo Command + Handler. El bus no cambia.
+ *
+ * Flujo: CommandBus → este handler → write model (Product) → repositorio de escritura
+ */
 @Component
 @RequiredArgsConstructor
 public class CreateProductCommandHandler implements CommandHandler<CreateProductCommand> {

@@ -9,6 +9,10 @@ import java.util.Map;
 /**
  * Implementación del Query Bus.
  * Mismo patrón que SimpleCommandBus pero para queries.
+ *
+ * Nota sobre @SuppressWarnings:
+ *   Mismo trade-off que SimpleCommandBus. La seguridad de tipos se garantiza
+ *   en cada QueryHandler concreto a través de su método queryType().
  */
 @Component
 public class SimpleQueryBus implements QueryBus {

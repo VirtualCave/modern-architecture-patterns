@@ -3,22 +3,19 @@ package com.tutorial.hexagonal.application.service;
 import com.tutorial.hexagonal.domain.model.Order;
 import com.tutorial.hexagonal.domain.model.OrderId;
 import com.tutorial.hexagonal.domain.port.input.UpdateOrderStatusUseCase;
-import com.tutorial.hexagonal.domain.port.output.OrderEventPublisher;
 import com.tutorial.hexagonal.domain.port.output.OrderRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
  * SERVICIO DE APLICACIÓN: cambios de estado del pedido.
  *
- * Patrón: load → modify → save → publish events
- * La lógica de validación de transición está en el propio agregado Order.
+ * Patrón: load → modify → save
+ * La lógica de validación de transición está en el propio modelo Order.
  */
 @RequiredArgsConstructor
 public class UpdateOrderStatusService implements UpdateOrderStatusUseCase {
 
     private final OrderRepository orderRepository;
-    private final OrderEventPublisher eventPublisher;
-
 
     @Override
     public Order confirm(String orderId) {
@@ -41,7 +38,7 @@ public class UpdateOrderStatusService implements UpdateOrderStatusUseCase {
     }
 
     /**
-     * Método helper que encapsula el patrón: find → apply → save → publish
+     * Método helper que encapsula el patrón: find → apply → save
      */
     private Order executeTransition(String orderId, java.util.function.Consumer<Order> transition) {
         var order = orderRepository.findById(OrderId.of(orderId))
@@ -49,9 +46,7 @@ public class UpdateOrderStatusService implements UpdateOrderStatusUseCase {
 
         transition.accept(order);
 
-        var saved = orderRepository.save(order);
-        saved.pullDomainEvents().forEach(eventPublisher::publish);
-        return saved;
+        return orderRepository.save(order);
     }
 }
 

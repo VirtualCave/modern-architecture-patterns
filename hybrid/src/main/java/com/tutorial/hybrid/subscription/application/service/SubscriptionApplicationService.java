@@ -14,6 +14,24 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * SERVICIO DE APLICACIÓN: orquesta todos los casos de uso de suscripciones.
+ *
+ * En este módulo hybrid se usa @Service (Spring gestiona el bean) como trade-off
+ * de practicidad. En el módulo hexagonal puro, los servicios de aplicación se
+ * instancian manualmente en BeanConfiguration para mantener el dominio agnóstico
+ * al framework. Ambas aproximaciones son válidas; este tutorial muestra las dos.
+ *
+ * Este servicio combina las tres arquitecturas:
+ *
+ *   HEXAGONAL → implementa Use Cases (puertos de entrada), usa puertos de salida (Repository, EventPublisher)
+ *   DDD       → coordina el aggregate Subscription, respeta sus invariantes, recoge domain events
+ *   CQRS      → las lecturas van al SubscriptionProjectionRepository (read model),
+ *               las escrituras van al SubscriptionRepository (write model)
+ *
+ * El método clave es persistAndProject(): guarda el aggregate, actualiza el read model
+ * y publica los domain events — todo en la secuencia correcta.
+ */
 @Service
 @RequiredArgsConstructor
 public class SubscriptionApplicationService implements

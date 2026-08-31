@@ -13,7 +13,15 @@ import java.util.Optional;
  * SERVICIO DE APLICACIÓN: consultas de pedidos.
  *
  * En arquitectura hexagonal pura, las queries también pasan por Use Cases.
- * En proyectos con CQRS + Hexagonal se podría ir directamente al read model.
+ * En proyectos con CQRS + Hexagonal se podría ir directamente al read model
+ * (ver módulo hybrid para ese ejemplo).
+ *
+ * En este tutorial los métodos son simples delegaciones al repositorio.
+ * En un sistema real, aquí vivirían aspectos transversales como:
+ *   - Validación de permisos / autorización ("¿puede este usuario ver este pedido?")
+ *   - Enriquecimiento de datos (combinar datos de varios repositorios)
+ *   - Caché de consultas frecuentes
+ *   - Logging de acceso a datos sensibles
  */
 @RequiredArgsConstructor
 public class GetOrderService implements GetOrderUseCase {

@@ -3,12 +3,19 @@
 ## Índice de contenidos
 
 - [Hexagonal Architecture](#hexagonal-architecture)
-- [CQRS](#cqrs)
 - [DDD](#ddd)
+- [CQRS](#cqrs)
 - [Cuándo mezclar arquitecturas](#cuándo-mezclar-arquitecturas)
 - [Regla práctica para elegir](#regla-práctica-para-elegir)
 - [APIs de ejemplo](#apis-de-ejemplo)
 - [Diagramas de Arquitectura](#diagramas-de-arquitectura)
+
+> **Orden de lectura recomendado:** Hexagonal → DDD → CQRS → Hybrid
+>
+> CQRS utiliza conceptos de DDD (write model rico, factory methods, value objects).
+> Si lees CQRS antes que DDD, algunos patrones pueden parecer arbitrarios.
+> Empieza siempre por Hexagonal para entender la base, luego DDD para el modelado del dominio,
+> y finalmente CQRS para la separación de lectura y escritura.
 
 ## Hexagonal Architecture
 
@@ -35,7 +42,7 @@ El dominio no debería saber si la app usa REST, colas, JPA, MongoDB o Kafka. Pa
 3. **La infraestructura no manda**
    - JPA, REST, colas, etc. son detalles intercambiables.
 
-4. **El agregado encapsula reglas**
+4. **La entidad de dominio encapsula reglas**
    - `Order` protege estados válidos.
    - Evita que la aplicación “haga trampas” con el estado.
 
@@ -92,16 +99,108 @@ flowchart TD
 - Prototipos desechables.
 - Sistemas muy pequeños donde el coste de abstracción supera el beneficio.
 
+## DDD
+
+### Idea principal
+
+DDD no es una arquitectura de capas "bonita"; es una forma de modelar el software alrededor del **lenguaje del negocio**.
+
+En lugar de pensar primero en tablas o endpoints, se piensa en:
+
+- qué quiere hacer el negocio,
+- cuáles son sus reglas,
+- qué conceptos son importantes,
+- y cómo se agrupan.
+
+### Lo que suele costar entender
+
+1. **Bounded Context**
+   - Un mismo término puede significar cosas distintas según el contexto.
+   - Por eso existen `account` y `customer` como contextos separados.
+
+2. **Aggregate Root**
+   - Es el guardián de las invariantes.
+   - En este repo, `Account` decide si se puede depositar, retirar o transferir.
+
+3. **Value Objects**
+   - No tienen identidad propia, solo valor.
+   - `Money`, `AccountId`, `CustomerId` son ejemplos perfectos.
+
+4. **Domain Service**
+   - Se usa cuando la lógica no pertenece claramente a un solo aggregate.
+   - `TransferDomainService` coordina una transferencia entre cuentas.
+
+5. **Domain Events**
+   - Son hechos que ocurrieron en el dominio.
+   - Permiten desacoplar reacciones posteriores.
+
+### Flujo visual
+
+```mermaid
+%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
+flowchart TD
+    A[HTTP request] --> B[Controller]
+    B --> C[Application Service]
+    C --> D[Aggregate Root / Domain Service]
+    D --> E[Repository de dominio]
+    E --> F[Persistencia JPA]
+
+    linkStyle default stroke:#94A3B8,stroke-width:2px;
+
+    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
+    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
+    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
+    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
+    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
+
+    class A,B entry;
+    class C app;
+    class D domain;
+    class E port;
+    class F infra;
+```
+
+### Pros
+
+- Excelente para dominios con reglas complejas.
+- Favorece lenguaje común negocio-tecnología.
+- Hace visibles los límites del sistema.
+- Los invariantes viven donde deben vivir: en el dominio.
+
+### Contras
+
+- Requiere entender bien el negocio.
+- Puede parecer sobreingeniería si el dominio es simple.
+- No te da automáticamente una solución técnica; exige criterio.
+- Si se aplica mal, se convierte en puro "patrón decorativo".
+
+### Cuándo interesa usarlo
+
+- Dominios complejos o cambiantes.
+- Sistemas con reglas de negocio importantes.
+- Productos donde la comprensión del negocio es clave.
+- Equipos que quieren una base robusta y evolutiva.
+
+### Cuándo no conviene
+
+- CRUDs triviales.
+- Aplicaciones de poca vida útil.
+- Cuando no existe complejidad de negocio real.
+- Cuando el equipo aún no puede sostener el coste conceptual.
+
 ## CQRS
 
 ### Idea principal
 
 CQRS separa **quién escribe** de **quién consulta**.
 
-La idea no es “poner dos carpetas diferentes”, sino aceptar que leer y escribir suelen tener necesidades muy distintas:
+La idea no es "poner dos carpetas diferentes", sino aceptar que leer y escribir suelen tener necesidades muy distintas:
 
 - Al escribir, importan reglas, validación e invariantes.
 - Al leer, importan rapidez, filtros y formatos de consulta.
+
+> **Nota**: CQRS usa conceptos de DDD como write model rico, factory methods y value objects.
+> Si este es tu primer contacto, conviene leer el módulo `ddd/` antes de este.
 
 ### Lo que suele costar entender
 
@@ -189,94 +288,6 @@ flowchart LR
 - Equipos que aún no dominan bien la arquitectura base.
 - Proyectos donde separar lectura/escritura no aporta un beneficio real.
 
-## DDD
-
-### Idea principal
-
-DDD no es una arquitectura de capas “bonita”; es una forma de modelar el software alrededor del **lenguaje del negocio**.
-
-En lugar de pensar primero en tablas o endpoints, se piensa en:
-
-- qué quiere hacer el negocio,
-- cuáles son sus reglas,
-- qué conceptos son importantes,
-- y cómo se agrupan.
-
-### Lo que suele costar entender
-
-1. **Bounded Context**
-   - Un mismo término puede significar cosas distintas según el contexto.
-   - Por eso existen `account` y `customer` como contextos separados.
-
-2. **Aggregate Root**
-   - Es el guardián de las invariantes.
-   - En este repo, `Account` decide si se puede depositar, retirar o transferir.
-
-3. **Value Objects**
-   - No tienen identidad propia, solo valor.
-   - `Money`, `AccountId`, `CustomerId` son ejemplos perfectos.
-
-4. **Domain Service**
-   - Se usa cuando la lógica no pertenece claramente a un solo aggregate.
-   - `TransferDomainService` coordina una transferencia entre cuentas.
-
-5. **Domain Events**
-   - Son hechos que ocurrieron en el dominio.
-   - Permiten desacoplar reacciones posteriores.
-
-### Flujo visual
-
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart TD
-    A[HTTP request] --> B[Controller]
-    B --> C[Application Service]
-    C --> D[Aggregate Root / Domain Service]
-    D --> E[Repository de dominio]
-    E --> F[Persistencia JPA]
-
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-
-    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-
-    class A,B entry;
-    class C app;
-    class D domain;
-    class E port;
-    class F infra;
-```
-
-### Pros
-
-- Excelente para dominios con reglas complejas.
-- Favorece lenguaje común negocio-tecnología.
-- Hace visibles los límites del sistema.
-- Los invariantes viven donde deben vivir: en el dominio.
-
-### Contras
-
-- Requiere entender bien el negocio.
-- Puede parecer sobreingeniería si el dominio es simple.
-- No te da automáticamente una solución técnica; exige criterio.
-- Si se aplica mal, se convierte en puro “patrón decorativo”.
-
-### Cuándo interesa usarlo
-
-- Dominios complejos o cambiantes.
-- Sistemas con reglas de negocio importantes.
-- Productos donde la comprensión del negocio es clave.
-- Equipos que quieren una base robusta y evolutiva.
-
-### Cuándo no conviene
-
-- CRUDs triviales.
-- Aplicaciones de poca vida útil.
-- Cuando no existe complejidad de negocio real.
-- Cuando el equipo aún no puede sostener el coste conceptual.
 
 ## Cuándo mezclar arquitecturas
 

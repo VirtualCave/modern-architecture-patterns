@@ -360,21 +360,16 @@ public class OrderService {
 public class CreateOrderService implements CreateOrderUseCase {
     private final OrderRepository orderRepository;
     private final InventoryService inventoryService;
-    private final OrderEventPublisher eventPublisher;
     
-    public Order create(CreateOrderCommand cmd) {
-        // Cargar datos necesarios
-        Customer customer = customerRepository.findById(cmd.getCustomerId());
-        
+    public Order create(String customerId, List<OrderItem> items) {
         // Lógica de dominio
-        Order order = Order.create(customer, cmd.getItems());
+        var order = Order.create(OrderId.generate(), customerId, items);
         
         // Persistir
         orderRepository.save(order);
         
         // Efectos secundarios
-        inventoryService.reserveItems(order.getItems());
-        eventPublisher.publish(order.pullDomainEvents());
+        inventoryService.reserveItems(order.items());
         
         return order;
     }

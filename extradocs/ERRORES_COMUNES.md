@@ -3,14 +3,9 @@
 ## Índice de contenidos
 
 - [Poner lógica de negocio en el controlador](#poner-lógica-de-negocio-en-el-controlador)
-- [No proteger invariantes en el aggregate](#no-proteger-invariantes-en-el-aggregate)
-- [Mezclar concerns de lectura y escritura](#mezclar-concerns-de-lectura-y-escritura)
-- [Exponer entidades de persistencia](#exponer-entidades-de-persistencia)
-- [No usar Value Objects](#no-usar-value-objects)
 - [El dominio no se guarda correctamente](#el-dominio-no-se-guarda-correctamente)
 - [CQRS: El read model no se actualiza](#cqrs-el-read-model-no-se-actualiza)
 - [El dominio depende de Spring](#el-dominio-depende-de-spring)
-- [DDD: Bounded contexts mezclados](#ddd-bounded-contexts-mezclados)
 - [No validar en el constructor](#no-validar-en-el-constructor)
 - [Errores de mapeo (MapStruct)](#errores-de-mapeo-mapstruct)
 - [Errores de transacción](#errores-de-transacción)
@@ -18,6 +13,8 @@
 - [Problemas de configuración y arranque](#problemas-de-configuración-y-arranque)
 - [Diagnóstico rápido general](#diagnóstico-rápido-general)
 - [Resumen](#resumen)
+
+> **Nota**: Para los antipatrones de diseño (Anemic Domain Model, Leaking Abstraction, Primitive Obsession, etc.) consulta el fichero `ANTI_PATRONES.md` de esta misma carpeta.
 
 ## Poner lógica de negocio en el controlador
 
@@ -114,334 +111,23 @@ public class Order {
 
 ---
 
-## No proteger invariantes en el aggregate
-
-### Síntomas
-
-- Se crean objetos con estado inválido
-- Se modifican objetos rompiendo reglas de negocio
-- Validaciones dispersas en diferentes lugares
-- Estado inconsistente en la base de datos
-
-### Error
-
-```java
-// ❌ MAL - No proteger invariantes
-public class Account {
-    private Money balance;
-    
-    public void withdraw(Money amount) {
-        this.balance = this.balance.subtract(amount); // ❌ No valida saldo
-    }
-    
-    public void setBalance(Money balance) {
-        this.balance = balance; // ❌ Setter público rompe invariantes
-    }
-}
-
-// Alguien puede hacer:
-public class AccountApplication {
-    public void misuse(Account account) {
-        account.withdraw(new Money(BigDecimal.valueOf(1000), Currency.getInstance("EUR"))); // Aunque solo tenga 100
-        account.setBalance(new Money(BigDecimal.valueOf(-100), Currency.getInstance("EUR"))); // Saldo negativo
-    }
-}
-```
-
-### Solución
-
-```java
-// ✅ BIEN - Proteger invariantes
-public class Account {
-    private Money balance;
-    
-    public void withdraw(Money amount) {
-        if (this.balance.lessThan(amount)) { // ✅ Protege invariante
-            throw new InsufficientFundsException();
-        }
-        this.balance = this.balance.subtract(amount);
-    }
-    
-    public void deposit(Money amount) {
-        if (amount.isNegative()) { // ✅ Protege invariante
-            throw new InvalidAmountException();
-        }
-        this.balance = this.balance.add(amount);
-    }
-    
-    // ✅ Sin setter público
-    public Money getBalance() {
-        return balance;
-    }
-}
-```
-
----
-
-## Mezclar concerns de lectura y escritura
-
-### Síntomas
-
-- Los mismos métodos leen y escriben
-- Difícil optimizar consultas
-- Lógica de escritura mezclada con lógica de lectura
-- Violación de CQRS
-
-### Error
-
-```java
-// ❌ MAL - Mezclar lectura y escritura
-public class ProductService {
-    public ProductDto createProduct(CreateProductRequest request) {
-        Product product = new Product(request.getName(), request.getPrice());
-        productRepository.save(product);
-        
-        // ❌ Mezcla escritura y lectura
-        return toDto(product); // ❌ La misma lógica de lectura se reutiliza aquí
-    }
-    
-    public ProductDto getProduct(Long id) {
-        Product product = productRepository.findById(id);
-        // ❌ Usa la misma lógica que createProduct
-        return toDto(product);
-    }
-
-    private ProductDto toDto(Product product) {
-        ProductDto dto = new ProductDto();
-        dto.setId(product.getId());
-        dto.setName(product.getName());
-        dto.setPrice(product.getPrice());
-        dto.setFormattedPrice(formatPrice(product.getPrice())); // ❌ Lógica de lectura
-        dto.setAvailable(product.getStock() > 0); // ❌ Lógica de lectura
-        return dto;
-    }
-}
-```
-
-### Solución
-
-```java
-// ✅ BIEN - Separar lectura y escritura (CQRS)
-
-// Command side - solo escribe
-public class CreateProductHandler implements CommandHandler<CreateProductCommand, Void> {
-    private final ProductWriteRepository writeRepository;
-    
-    public Void handle(CreateProductCommand cmd) {
-        Product product = new Product(cmd.getName(), cmd.getPrice());
-        writeRepository.save(product);
-        return null; // ✅ No devuelve datos
-    }
-}
-
-// Query side - solo lee
-public class GetProductByIdHandler implements QueryHandler<GetProductByIdQuery, ProductView> {
-    private final ProductViewRepository viewRepository;
-    
-    public ProductView handle(GetProductByIdQuery query) {
-        return viewRepository.findById(query.getProductId()); // ✅ Solo lee
-    }
-}
-
-// Read model optimizado para consultas
-public class ProductView {
-    private String id;
-    private String name;
-    private BigDecimal price;
-    private String formattedPrice; // ✅ Pre-calculado
-    private boolean available; // ✅ Pre-calculado
-}
-```
-
----
-
-## Exponer entidades de persistencia
-
-### Síntomas
-
-- Los controladores devuelven entidades JPA
-- Las APIs reciben entidades JPA
-- Difícil cambiar la estructura de la BD
-- Posible exposición de datos sensibles
-
-### Error
-
-```java
-// ❌ MAL - Exponer entidades JPA
-@RestController
-public class ProductController {
-    @GetMapping("/products/{id}")
-    public ProductEntity getProduct(@PathVariable Long id) { // ❌ Expone JPA entity
-        return productRepository.findById(id).orElseThrow();
-    }
-    
-    @PostMapping("/products")
-    public ProductEntity createProduct(@RequestBody ProductEntity product) { // ❌ Recibe JPA entity
-        return productRepository.save(product);
-    }
-    
-    @GetMapping("/products")
-    public List<ProductEntity> getAllProducts() { // ❌ Expone lista de entidades
-        return productRepository.findAll();
-    }
-}
-```
-
-### Solución
-
-```java
-// ✅ BIEN - Usar DTOs
-@RestController
-public class ProductController {
-    @GetMapping("/products/{id}")
-    public ProductDto getProduct(@PathVariable Long id) { // ✅ Expone DTO
-        Product product = productRepository.findById(id);
-        return productMapper.toDto(product);
-    }
-    
-    @PostMapping("/products")
-    public ProductDto createProduct(@RequestBody CreateProductRequest request) { // ✅ Recibe DTO
-        CreateProductCommand cmd = toCommand(request);
-        Product product = createProductHandler.handle(cmd);
-        return productMapper.toDto(product);
-    }
-    
-    @GetMapping("/products")
-    public List<ProductDto> getAllProducts() { // ✅ Expone lista de DTOs
-        List<Product> products = productRepository.findAll();
-        return products.stream()
-            .map(productMapper::toDto)
-            .toList();
-    }
-}
-```
-
----
-
-## No usar Value Objects
-
-### Síntomas
-
-- Validaciones duplicadas en múltiples lugares
-- Código propenso a errores (null, valores inválidos)
-- Falta de semántica en el código
-- Difícil de entender qué representa un valor
-
-### Error
-
-```java
-// ❌ MAL - No usar Value Objects
-public class Order {
-    private String orderId; // ❌ String para ID
-    private BigDecimal total; // ❌ BigDecimal para dinero
-    private String currency; // ❌ String para moneda
-    private String email; // ❌ String para email
-}
-
-public void createOrder(String orderId, BigDecimal total, String currency, String email) {
-    // ❌ Validación duplicada en cada lugar
-    if (orderId == null || orderId.isBlank()) {
-        throw new InvalidOrderIdException();
-    }
-    if (total == null || total.compareTo(BigDecimal.ZERO) < 0) {
-        throw new InvalidAmountException();
-    }
-    if (currency == null || !isValidCurrency(currency)) {
-        throw new InvalidCurrencyException();
-    }
-    if (email == null || !isValidEmail(email)) {
-        throw new InvalidEmailException();
-    }
-    // ...
-}
-```
-
-### Solución
-
-```java
-// ✅ BIEN - Usar Value Objects
-public final class OrderId {
-    private final String value;
-    
-    private OrderId(String value) {
-        if (value == null || value.isBlank()) {
-            throw new InvalidOrderIdException();
-        }
-        this.value = value;
-    }
-    
-    public static OrderId of(String value) {
-        return new OrderId(value);
-    }
-}
-
-public final class Money {
-    private final BigDecimal amount;
-    private final Currency currency;
-    
-    public Money(BigDecimal amount, Currency currency) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidMoneyException();
-        }
-        this.amount = amount;
-        this.currency = currency;
-    }
-}
-
-public final class Email {
-    private final String value;
-    
-    private Email(String value) {
-        if (value == null || !isValidEmail(value)) {
-            throw new InvalidEmailException();
-        }
-        this.value = value;
-    }
-    
-    public static Email of(String value) {
-        return new Email(value);
-    }
-}
-
-public class Order {
-    private OrderId orderId; // ✅ Value Object
-    private Money total; // ✅ Value Object
-    private Email customerEmail; // ✅ Value Object
-}
-
-public void createOrder(OrderId orderId, Money total, Email email) {
-    // ✅ Los Value Objects ya validan
-    // Código más limpio y seguro
-}
-```
-
----
-
 ## El dominio no se guarda correctamente
 
 ### Síntomas
 
-- Los cambios en el aggregate no persisten
-- Los eventos de dominio no se publican
+- Los cambios en la entidad de dominio no persisten
 - Tests pasan pero en producción no funciona
 - Estado desincronizado
 
 ### Error
 
 ```java
-// ❌ MAL - No guardar el aggregate
+// ❌ MAL - No guardar la entidad de dominio
 public class OrderService {
-    public void updateOrderStatus(OrderId id, UpdateOrderStatusCommand cmd) {
+    public void confirm(OrderId id) {
         Order order = repository.findById(id);
-        order.changeStatus(cmd.getNewStatus()); // ❌ Usa el comando pero no persiste el cambio
-        // ❌ Falta guardar
-    }
-    
-    public void addItemToOrder(OrderId id, OrderItem item) {
-        Order order = repository.findById(id);
-        order.addItem(item);
-        // ❌ Falta guardar
-        // ❌ Falta publicar eventos
+        order.confirm(); // ❌ Cambia el estado pero no lo persiste
+        // ❌ Falta repository.save(order)
     }
 }
 ```
@@ -449,26 +135,20 @@ public class OrderService {
 ### Solución
 
 ```java
-// ✅ BIEN - Guardar y publicar eventos
+// ✅ BIEN - Siempre guardar después de modificar
 public class OrderService {
     private final OrderRepository repository;
-    private final OrderEventPublisher eventPublisher;
     
-    public void updateOrderStatus(OrderId id, UpdateOrderStatusCommand cmd) {
+    public void confirm(OrderId id) {
         Order order = repository.findById(id);
-        order.changeStatus(cmd.getNewStatus()); // ✅ El comando alimenta la acción del dominio
-        repository.save(order); // ✅ Guardar
-        eventPublisher.publish(order.pullDomainEvents()); // ✅ Publicar eventos
-    }
-    
-    public void addItemToOrder(OrderId id, OrderItem item) {
-        Order order = repository.findById(id);
-        order.addItem(item);
-        repository.save(order); // ✅ Guardar
-        eventPublisher.publish(order.pullDomainEvents()); // ✅ Publicar eventos
+        order.confirm();
+        repository.save(order); // ✅ Guardar el resultado
     }
 }
 ```
+
+> **Nota**: En módulos que usan domain events (como `ddd` o `hybrid`), además del save hay que publicar los eventos acumulados. Ver el módulo `hybrid` para un ejemplo completo.
+
 
 ---
 
@@ -555,16 +235,12 @@ public class Order {
     @Autowired
     private OrderRepository repository; // ❌ Dependencia de Spring
     
-    @Autowired
-    private OrderEventPublisher publisher; // ❌ Dependencia de Spring
-    
     public void confirm() {
         if (this.status != OrderStatus.PENDING) {
             throw new IllegalStateException("Solo se pueden confirmar pedidos pendientes");
         }
         this.status = OrderStatus.CONFIRMED;
         repository.save(this); // ❌ El dominio guarda directamente
-        publisher.publish(new OrderConfirmedEvent(this)); // ❌ El dominio publica directamente
     }
 }
 ```
@@ -585,90 +261,15 @@ public class Order {
     }
 }
 
-// El servicio orquesta
+// El servicio de aplicación orquesta
 @Service
 public class OrderService {
     private final OrderRepository repository;
-    private final OrderEventPublisher publisher;
     
     public void confirmOrder(OrderId id) {
         Order order = repository.findById(id);
         order.confirm(); // ✅ Lógica en el dominio
         repository.save(order); // ✅ Servicio guarda
-        publisher.publish(new OrderConfirmedEvent(order.getId())); // ✅ Servicio publica
-    }
-}
-```
-
----
-
-## DDD: Bounded contexts mezclados
-
-### Síntomas
-
-- El código de `account` usa directamente clases de `customer`
-- No hay límites claros entre contextos
-- Acoplamiento entre contextos
-- Difícil de evolucionar independientemente
-
-### Error
-
-```java
-// ❌ MAL - Mezclar bounded contexts
-public class Account {
-    private Customer customer; // ❌ Account depende de Customer context
-
-    public void setCustomer(Customer customer) { // ❌ Setter público rompe el límite
-        this.customer = customer;
-    }
-}
-
-// O peor
-public class Account {
-    private CustomerEntity customerEntity; // ❌ Dependencia de infraestructura de otro contexto
-}
-
-// El servicio usa directamente entidades de otro contexto
-@Service
-public class AccountService {
-    public void createAccountForCustomer(CustomerEntity customer) { // ❌
-        Account account = new Account();
-        account.setCustomer(customer);
-        accountRepository.save(account);
-    }
-}
-```
-
-### Solución
-
-```java
-// ✅ BIEN - Contextos separados
-public class Account {
-    private AccountId id;
-    private CustomerId ownerId; // ✅ Solo ID, no el objeto completo
-}
-
-// Si se necesita el customer, se busca por ID
-@Service
-public class AccountService {
-    private final AccountRepository accountRepository;
-    private final CustomerRepository customerRepository;
-    
-    public AccountDto getAccountWithCustomer(AccountId id) {
-        Account account = accountRepository.findById(id);
-        Customer customer = customerRepository.findById(account.getOwnerId()); // ✅ Búsqueda explícita
-        return toDto(account, customer);
-    }
-}
-
-// O usa un servicio de integración
-@Service
-public class CustomerIntegrationService {
-    private final CustomerClient customerClient;
-    
-    public CustomerInfo getCustomerInfo(CustomerId id) {
-        // ✅ Llama al bounded context de customer
-        return customerClient.getCustomer(id);
     }
 }
 ```
@@ -813,12 +414,10 @@ public interface OrderMapper {
 // ❌ MAL - Sin transacción
 @Service
 public class OrderService {
-    public void createOrder(CreateOrderCommand cmd) {
-        CustomerId customerId = cmd.getCustomerId();
-        List<OrderItem> items = cmd.getItems();
-        Order order = Order.create(customerId, items);
+    public void createOrder(String customerId, List<OrderItem> items) {
+        Order order = Order.create(OrderId.generate(), customerId, items);
         repository.save(order);
-        inventoryService.reserveItems(order.getItems());
+        inventoryService.reserveItems(order.items());
     }
 }
 ```
@@ -830,12 +429,10 @@ public class OrderService {
 @Service
 public class OrderService {
     @Transactional
-    public void createOrder(CreateOrderCommand cmd) {
-        CustomerId customerId = cmd.getCustomerId();
-        List<OrderItem> items = cmd.getItems();
-        Order order = Order.create(customerId, items);
+    public void createOrder(String customerId, List<OrderItem> items) {
+        Order order = Order.create(OrderId.generate(), customerId, items);
         repository.save(order);
-        inventoryService.reserveItems(order.getItems());
+        inventoryService.reserveItems(order.items());
     }
 }
 
@@ -843,12 +440,10 @@ public class OrderService {
 @Service
 public class OrderService {
     @Transactional(rollbackFor = {InsufficientStockException.class, InvalidOrderException.class})
-    public void createOrder(CreateOrderCommand cmd) {
-        CustomerId customerId = cmd.getCustomerId();
-        List<OrderItem> items = cmd.getItems();
-        Order order = Order.create(customerId, items);
+    public void createOrder(String customerId, List<OrderItem> items) {
+        Order order = Order.create(OrderId.generate(), customerId, items);
         repository.save(order);
-        inventoryService.reserveItems(order.getItems());
+        inventoryService.reserveItems(order.items());
     }
 }
 ```
@@ -874,20 +469,20 @@ public class OrderService {
 ### Error
 
 ```java
-// ❌ MAL - Test con estado compartido
+// ❌ MAL - Test con estado compartido y dependiendo de Spring
 @SpringBootTest
 class OrderServiceTest {
     @Autowired
     private OrderService orderService;
 
-    private CreateOrderCommand cmd = new CreateOrderCommand(
-        CustomerId.of("cust-1"),
-        List.of(new OrderItem("prod-1", 2, new Money(BigDecimal.valueOf(25), Currency.getInstance("EUR"))))
+    private String customerId = "cust-1";
+    private List<OrderItem> items = List.of(
+        new OrderItem("prod-1", "Laptop", Money.euros(1200.00), 1)
     );
 
     @Test
     void shouldCreateOrder() {
-        orderService.createOrder(cmd);
+        orderService.createOrder(customerId, items); // ❌ Tests con BD real, lento y frágil
     }
 }
 ```
@@ -895,33 +490,26 @@ class OrderServiceTest {
 ### Solución
 
 ```java
-// ✅ BIEN - Test unitario aislado
-class OrderServiceTest {
-    private OrderRepository orderRepository;
-    private OrderEventPublisher eventPublisher;
-    private OrderService orderService;
-    private CreateOrderCommand cmd;
+// ✅ BIEN - Test unitario del dominio, sin Spring ni BD
+class OrderTest {
 
-    @BeforeEach
-    void setUp() {
-        orderRepository = mock(OrderRepository.class);
-        eventPublisher = mock(OrderEventPublisher.class);
-        orderService = new OrderService(orderRepository, eventPublisher);
-        cmd = new CreateOrderCommand(
-            CustomerId.of("cust-1"),
-            List.of(new OrderItem("prod-1", 2, new Money(BigDecimal.valueOf(25), Currency.getInstance("EUR"))))
-        );
+    @Test
+    void shouldCreateOrderWithCorrectStatus() {
+        var items = List.of(new OrderItem("P1", "Laptop", Money.euros(1200.00), 1));
+
+        var order = Order.create(OrderId.generate(), "CUST-1", items);
+
+        assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
+        assertThat(order.totalAmount().amount().doubleValue()).isEqualTo(1200.00);
     }
 
     @Test
-    void shouldCreateOrder() {
-        when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    void shouldConfirmOrder() {
+        var order = crearPedido();
 
-        Order order = orderService.createOrder(cmd);
+        order.confirm();
 
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-        verify(orderRepository).save(any());
-        verify(eventPublisher).publish(any());
+        assertThat(order.status()).isEqualTo(OrderStatus.CONFIRMED);
     }
 }
 ```
@@ -993,24 +581,30 @@ spring.h2.console.path=/h2-console
 ### Activar logs útiles
 
 ```properties
-logging.level.com.example.hexagonal.domain=DEBUG
-logging.level.com.example.cqrs.domain=DEBUG
-logging.level.com.example.ddd.domain=DEBUG
-logging.level.com.example.hybrid.domain=DEBUG
+logging.level.com.tutorial.hexagonal.domain=DEBUG
+logging.level.com.tutorial.cqrs.product=DEBUG
+logging.level.com.tutorial.ddd.account.domain=DEBUG
+logging.level.com.tutorial.hybrid.subscription.domain=DEBUG
 ```
 
-### Verificar eventos de dominio
+### Verificar domain events (módulo ddd / hybrid)
+
+Los módulos `ddd` y `hybrid` usan domain events. Para verificarlos en tests:
 
 ```java
+// Ejemplo del módulo ddd
 @Test
-void shouldPublishEventWhenOrderCreated() {
-    Order order = Order.create(customer, items);
+void shouldGenerateEventWhenAccountOpened() {
+    var account = Account.open(AccountId.generate(), "CUST-1", "Alice",
+            new Money(BigDecimal.valueOf(500), "EUR"));
 
-    List<DomainEvent> events = order.pullDomainEvents();
+    var events = account.pullDomainEvents();
     assertThat(events).hasSize(1);
-    assertThat(events.getFirst()).isInstanceOf(OrderCreatedEvent.class);
+    assertThat(events.getFirst()).isInstanceOf(AccountEvent.AccountOpened.class);
 }
 ```
+
+> **Nota**: El módulo `hexagonal` no usa domain events. Ver `hybrid` para un ejemplo de combinación completa.
 
 ### Probar aggregates sin Spring
 
@@ -1046,19 +640,16 @@ void shouldMapOrderToEntity() {
 | Error | Síntoma principal | Solución |
 |-------|-------------------|----------|
 | Lógica en controlador | Controlador con validaciones | Delegar a casos de uso |
-| No proteger invariantes | Estado inválido posible | Validar en aggregates |
-| Mezclar lectura/escritura | Métodos que leen y escriben | Separar en CQRS |
-| Exponer entidades JPA | API devuelve entidades | Usar DTOs |
-| No usar Value Objects | Validación duplicada | Crear Value Objects |
-| No guardar aggregate | Cambios no persisten | Guardar y publicar eventos |
+| No guardar la entidad | Cambios no persisten | Siempre guardar tras modificar |
 | Read model no actualizado | Datos desactualizados | Proyectar después de command |
-| Dominio con Spring | Difícil probar sin Spring | Dominio puro |
-| Contextos mezclados | Acoplamiento entre contextos | Usar IDs y servicios de integración |
-| No validar en constructor | Objetos inválidos | Validar en constructor |
-| MapStruct mal configurado | Campos nulos o compilación rota | Configurar `@Mapper` y el procesador |
-| Transacciones mal definidas | Datos inconsistentes | Usar `@Transactional` |
-| Tests frágiles | Fallos intermitentes | Aislar estado y mocks |
+| Dominio con Spring | Difícil probar sin Spring | Dominio puro, sin dependencias de framework |
+| No validar en constructor | Objetos en estado inválido | Validar en constructor o factory method |
+| MapStruct mal configurado | Campos nulos o compilación rota | Configurar `@Mapper` y el procesador de anotaciones |
+| Transacciones mal definidas | Datos inconsistentes | Usar `@Transactional` en el caso de uso |
+| Tests frágiles | Fallos intermitentes | Tests unitarios de dominio puro, sin Spring |
 | Configuración incorrecta | La app no arranca | Revisar puerto, Java, Maven y H2 |
+
+> Para antipatrones de diseño (Anemic Model, Leaking Abstraction, Primitive Obsession, etc.) consulta el fichero `ANTI_PATRONES.md` de esta misma carpeta.
 
 
 

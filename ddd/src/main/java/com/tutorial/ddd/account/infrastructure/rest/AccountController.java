@@ -1,9 +1,9 @@
 package com.tutorial.ddd.account.infrastructure.rest;
 
 import com.tutorial.ddd.account.application.AccountApplicationService;
-import com.tutorial.ddd.account.application.command.DepositMoneyCommand;
-import com.tutorial.ddd.account.application.command.OpenAccountCommand;
-import com.tutorial.ddd.account.application.command.TransferMoneyCommand;
+import com.tutorial.ddd.account.application.input.DepositMoneyInput;
+import com.tutorial.ddd.account.application.input.OpenAccountInput;
+import com.tutorial.ddd.account.application.input.TransferMoneyInput;
 import com.tutorial.ddd.account.domain.Account;
 import com.tutorial.ddd.account.infrastructure.rest.dto.DepositRequest;
 import com.tutorial.ddd.account.infrastructure.rest.dto.OpenAccountRequest;
@@ -26,7 +26,7 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity<AccountResponse> open(@Valid @RequestBody OpenAccountRequest request) {
-        var account = service.openAccount(new OpenAccountCommand(
+        var account = service.openAccount(new OpenAccountInput(
                 request.ownerId(),
                 request.ownerName(),
                 request.initialDeposit()
@@ -46,13 +46,13 @@ public class AccountController {
 
     @PostMapping("/{id}/deposit")
     public AccountResponse deposit(@PathVariable String id, @Valid @RequestBody DepositRequest request) {
-        var updated = service.deposit(new DepositMoneyCommand(id, request.amount()));
+        var updated = service.deposit(new DepositMoneyInput(id, request.amount()));
         return AccountResponse.from(updated);
     }
 
     @PostMapping("/{id}/transfer")
     public ResponseEntity<Void> transfer(@PathVariable String id, @Valid @RequestBody TransferRequest request) {
-        service.transfer(new TransferMoneyCommand(id, request.toAccountId(), request.amount()));
+        service.transfer(new TransferMoneyInput(id, request.toAccountId(), request.amount()));
         return ResponseEntity.accepted().build();
     }
 

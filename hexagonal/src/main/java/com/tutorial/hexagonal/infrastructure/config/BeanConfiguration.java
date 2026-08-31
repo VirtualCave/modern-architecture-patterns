@@ -6,9 +6,7 @@ import com.tutorial.hexagonal.application.service.UpdateOrderStatusService;
 import com.tutorial.hexagonal.domain.port.input.CreateOrderUseCase;
 import com.tutorial.hexagonal.domain.port.input.GetOrderUseCase;
 import com.tutorial.hexagonal.domain.port.input.UpdateOrderStatusUseCase;
-import com.tutorial.hexagonal.domain.port.output.OrderEventPublisher;
 import com.tutorial.hexagonal.domain.port.output.OrderRepository;
-import com.tutorial.hexagonal.infrastructure.adapter.output.event.LogOrderEventPublisher;
 import com.tutorial.hexagonal.infrastructure.adapter.output.persistence.OrderJpaAdapter;
 import com.tutorial.hexagonal.infrastructure.adapter.output.persistence.jpa.SpringDataOrderRepository;
 import com.tutorial.hexagonal.infrastructure.adapter.output.persistence.mapper.OrderPersistenceMapper;
@@ -22,10 +20,16 @@ import org.springframework.context.annotation.Configuration;
  * Aquí se conectan los puertos con sus adaptadores:
  *
  *   OrderRepository (puerto) ← OrderJpaAdapter (adaptador de salida)
- *   OrderEventPublisher (puerto) ← LogOrderEventPublisher (adaptador de salida)
  *
  * Beneficio: Para cambiar de H2 a PostgreSQL solo se cambia esta clase.
  * El dominio y la application no se tocan.
+ *
+ * Nota sobre el diseño:
+ *   Los servicios de aplicación (CreateOrderService, etc.) NO llevan @Service.
+ *   Se instancian aquí explícitamente para que el dominio no dependa de Spring.
+ *   Esto es arquitectura hexagonal estricta: la capa de aplicación es agnóstica al framework.
+ *   En el módulo hybrid verás que SubscriptionApplicationService SÍ usa @Service,
+ *   que es un trade-off válido de simplicidad en proyectos reales.
  */
 @Configuration
 public class BeanConfiguration {
@@ -40,18 +44,13 @@ public class BeanConfiguration {
         return new OrderJpaAdapter(jpaRepository, orderPersistenceMapper);
     }
 
-    @Bean
-    public OrderEventPublisher orderEventPublisher() {
-        return new LogOrderEventPublisher();
-    }
-
     // -----------------------------------------------------------------
     // Servicios de aplicación (implementaciones de puertos de entrada)
     // -----------------------------------------------------------------
 
     @Bean
-    public CreateOrderUseCase createOrderUseCase(OrderRepository repository, OrderEventPublisher publisher) {
-        return new CreateOrderService(repository, publisher);
+    public CreateOrderUseCase createOrderUseCase(OrderRepository repository) {
+        return new CreateOrderService(repository);
     }
 
     @Bean
@@ -60,8 +59,8 @@ public class BeanConfiguration {
     }
 
     @Bean
-    public UpdateOrderStatusUseCase updateOrderStatusUseCase(OrderRepository repository, OrderEventPublisher publisher) {
-        return new UpdateOrderStatusService(repository, publisher);
+    public UpdateOrderStatusUseCase updateOrderStatusUseCase(OrderRepository repository) {
+        return new UpdateOrderStatusService(repository);
     }
 }
 

@@ -25,7 +25,5 @@ public interface OrderRepository {
     List<Order> findByCustomerId(String customerId);
 
     List<Order> findAll();
-
-    void deleteById(OrderId id);
 }
 

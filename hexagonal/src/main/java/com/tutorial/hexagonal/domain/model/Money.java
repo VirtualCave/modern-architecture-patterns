@@ -5,11 +5,17 @@ import java.math.RoundingMode;
 import java.util.Currency;
 
 /**
- * Value Object: Money
+ * Tipo monetario inmutable para encapsular la aritmética de precios.
  *
- * Encapsula la aritmética monetaria y evita errores con doubles.
  * Como record de Java 26, es completamente inmutable.
  * Cada operación devuelve una NUEVA instancia (estilo funcional).
+ * Evita errores de redondeo al trabajar con BigDecimal en lugar de double.
+ *
+ * Nota sobre la estructura del proyecto:
+ *   Cada módulo tiene su propio Money en lugar de compartir uno común.
+ *   Esto es una decisión deliberada para mantener cada módulo independiente y autocontenido.
+ *   En producción, si los módulos fueran microservicios, esta independencia sería obligatoria.
+ *   Un "shared kernel" (librería compartida) también es válido, pero introduce acoplamiento.
  */
 public record Money(BigDecimal amount, String currency) {
 

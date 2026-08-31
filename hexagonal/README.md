@@ -19,19 +19,19 @@ La app se construye alrededor del **dominio** (`Order`), no alrededor de Spring 
 
 ## Conceptos clave en este módulo
 
-- **Aggregate Root**: `domain/model/Order`
+- **Entidad de dominio**: `domain/model/Order`
   - Protege reglas de negocio: transiciones de estado, cálculo de total, cancelaciones válidas.
-- **Value Objects**: `Money`, `OrderId`, `OrderItem`
+- **Tipos de dominio**: `Money`, `OrderId`, `OrderItem`
   - Son inmutables y encapsulan validaciones.
 - **Input Ports (casos de uso)**: `CreateOrderUseCase`, `GetOrderUseCase`, `UpdateOrderStatusUseCase`
   - Definen las operaciones que puede pedir el exterior.
 - **Application Services**: `CreateOrderService`, `GetOrderService`, `UpdateOrderStatusService`
-  - Orquestan el flujo (`load -> domain logic -> save -> publish events`).
-- **Output Ports**: `OrderRepository`, `OrderEventPublisher`
-  - Son interfaces del dominio para persistencia/publicación de eventos.
+  - Orquestan el flujo (`load -> domain logic -> save`).
+- **Output Ports**: `OrderRepository`
+  - Son interfaces del dominio para persistencia.
 - **Adapters**:
   - Entrada: `infrastructure/adapter/input/rest/OrderController`
-  - Salida: `OrderJpaAdapter` (BD) y `LogOrderEventPublisher` (eventos)
+  - Salida: `OrderJpaAdapter` (BD)
 - **MapStruct (recomendado en Hexagonal)**
   - Mapper REST: `infrastructure/adapter/input/rest/mapper/OrderRestMapper`
   - Mapper persistencia: `infrastructure/adapter/output/persistence/mapper/OrderPersistenceMapper`
@@ -118,18 +118,13 @@ sequenceDiagram
     participant Service
     participant Order
     participant Repository
-    participant EventPublisher
     participant DB
 
     Client->>Controller: POST /api/orders
     Controller->>Controller: toCommand(request)
-    Controller->>UseCase: create(command)
-    UseCase->>Service: create(command)
-    Service->>Repository: findById(customerId)
-    Repository->>DB: SELECT
-    DB-->>Repository: Customer
-    Repository-->>Service: Customer
-    Service->>Order: Order.create(customer, items)
+    Controller->>UseCase: create(customerId, items)
+    UseCase->>Service: create(customerId, items)
+    Service->>Order: Order.create(customerId, items)
     Order->>Order: validate items
     Order->>Order: calculate total
     Order-->>Service: Order
@@ -137,10 +132,6 @@ sequenceDiagram
     Repository->>DB: INSERT
     DB-->>Repository: Order
     Repository-->>Service: Order
-    Service->>Order: pullDomainEvents()
-    Order-->>Service: [OrderCreatedEvent]
-    Service->>EventPublisher: publish(events)
-    EventPublisher-->>Service: published
     Service-->>UseCase: Order
     UseCase-->>Controller: Order
     Controller->>Controller: toResponse(order)
@@ -170,7 +161,6 @@ sequenceDiagram
     participant Service
     participant Order
     participant Repository
-    participant EventPublisher
 
     Client->>Controller: PATCH /api/orders/:id/confirm
     Controller->>UseCase: updateStatus(id, CONFIRM)
@@ -182,10 +172,6 @@ sequenceDiagram
     Order-->>Service: success
     Service->>Repository: save(order)
     Repository-->>Service: saved
-    Service->>Order: pullDomainEvents()
-    Order-->>Service: [OrderConfirmedEvent]
-    Service->>EventPublisher: publish(events)
-    EventPublisher-->>Service: published
     Service-->>UseCase: Order
     UseCase-->>Controller: Order
     Controller-->>Client: 200 OK

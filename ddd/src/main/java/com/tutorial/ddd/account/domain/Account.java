@@ -27,6 +27,10 @@ public class Account {
         this.createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Factory method para crear una cuenta NUEVA.
+     * Valida las reglas de negocio, fija el estado inicial y genera el evento AccountOpened.
+     */
     public static Account open(AccountId id, String ownerId, String ownerName, Money initialDeposit) {
         if (ownerId == null || ownerId.isBlank()) throw new IllegalArgumentException("ownerId is required");
         if (ownerName == null || ownerName.isBlank()) throw new IllegalArgumentException("ownerName is required");
@@ -35,6 +39,15 @@ public class Account {
         return account;
     }
 
+    /**
+     * Factory method para reconstruir una cuenta desde persistencia.
+     *
+     * La diferencia con open() es importante:
+     *  - open()         → cuenta nueva, genera eventos, fija fecha actual
+     *  - reconstitute() → restaura el estado exacto que había en la BD, sin eventos ni validaciones adicionales
+     *
+     * Este método lo usa el mapper de persistencia. Nunca debería llamarse desde el dominio.
+     */
     public static Account reconstitute(AccountId id, String ownerId, String ownerName, Money balance, boolean active, LocalDateTime createdAt) {
         var account = new Account(id, ownerId, ownerName, balance);
         account.active = active;

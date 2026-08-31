@@ -17,6 +17,12 @@ import java.util.List;
  * Tiene anotaciones JPA (@Entity, @Id, etc.) que el dominio no debe tener.
  *
  * El adaptador OrderJpaAdapter convierte entre Order (dominio) y OrderEntity (JPA).
+ *
+ * Nota sobre @NoArgsConstructor(access = PROTECTED):
+ *   JPA necesita un constructor sin argumentos para reconstruir entidades desde la BD.
+ *   Lo marcamos PROTECTED (no public) para que nadie en el código de producción
+ *   pueda crear un OrderEntity vacío. La construcción siempre debe ir por el constructor
+ *   con parámetros, que garantiza un estado válido.
  */
 @Entity
 @Table(name = "orders")

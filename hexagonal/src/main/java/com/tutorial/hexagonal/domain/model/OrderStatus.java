@@ -4,7 +4,7 @@ package com.tutorial.hexagonal.domain.model;
  * Enum de estados del pedido.
  *
  * Define las transiciones válidas como máquina de estados.
- * El Aggregate Order usa este enum para proteger sus invariantes.
+ * Order usa este enum para proteger sus invariantes.
  *
  * Transiciones válidas:
  *   PENDING → CONFIRMED → SHIPPED → DELIVERED

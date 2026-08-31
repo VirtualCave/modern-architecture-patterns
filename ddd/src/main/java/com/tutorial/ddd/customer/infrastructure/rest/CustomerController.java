@@ -1,7 +1,7 @@
 package com.tutorial.ddd.customer.infrastructure.rest;
 
 import com.tutorial.ddd.customer.application.CustomerApplicationService;
-import com.tutorial.ddd.customer.application.command.CreateCustomerCommand;
+import com.tutorial.ddd.customer.application.input.CreateCustomerInput;
 import com.tutorial.ddd.customer.domain.Customer;
 import com.tutorial.ddd.customer.infrastructure.rest.dto.CreateCustomerRequest;
 import jakarta.validation.Valid;
@@ -23,7 +23,7 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CreateCustomerRequest request) {
-        var customer = service.create(new CreateCustomerCommand(request.name(), request.email()));
+        var customer = service.create(new CreateCustomerInput(request.name(), request.email()));
         return ResponseEntity.created(URI.create("/api/customers/" + customer.id().value())).body(CustomerResponse.from(customer));
     }
 

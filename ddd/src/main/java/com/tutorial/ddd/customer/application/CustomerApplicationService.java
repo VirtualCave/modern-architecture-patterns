@@ -1,6 +1,6 @@
 package com.tutorial.ddd.customer.application;
 
-import com.tutorial.ddd.customer.application.command.CreateCustomerCommand;
+import com.tutorial.ddd.customer.application.input.CreateCustomerInput;
 import com.tutorial.ddd.customer.domain.Customer;
 import com.tutorial.ddd.customer.domain.CustomerId;
 import com.tutorial.ddd.customer.domain.repository.CustomerRepository;
@@ -18,8 +18,8 @@ public class CustomerApplicationService {
     private final CustomerRepository repository;
 
 
-    public Customer create(CreateCustomerCommand command) {
-        var customer = Customer.create(CustomerId.generate(), command.name(), command.email());
+    public Customer create(CreateCustomerInput input) {
+        var customer = Customer.create(CustomerId.generate(), input.name(), input.email());
         return repository.save(customer);
     }
 

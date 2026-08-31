@@ -15,6 +15,12 @@ import java.util.Map;
  *
  * Ventaja: añadir un nuevo command + handler no requiere modificar el bus.
  * Solo se crea el handler con @Component y Spring lo registra automáticamente.
+ *
+ * Nota sobre @SuppressWarnings:
+ *   Java no soporta tipos genéricos covariantes para este patrón.
+ *   No podemos declarar Map<Class<?>, CommandHandler<?>> con wildcards seguros.
+ *   La seguridad de tipos se mantiene individualmente en cada handler concreto
+ *   (cada uno declara su commandType()). El bus acepta este trade-off deliberadamente.
  */
 @Component
 public class SimpleCommandBus implements CommandBus {

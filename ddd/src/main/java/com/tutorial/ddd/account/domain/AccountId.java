@@ -1,5 +1,16 @@
 package com.tutorial.ddd.account.domain;
 
+/**
+ * VALUE OBJECT: AccountId
+ *
+ * Encapsula el identificador de una cuenta bancaria.
+ * Inmutable por diseño (record de Java).
+ *
+ * ¿Por qué no usar String directamente?
+ * - Un String puede ser nulo, vacío o contener cualquier cosa sin que el compilador avise.
+ * - AccountId garantiza que si existe, es válido. La validación ocurre una sola vez, aquí.
+ * - El código es más expresivo: account.id() devuelve AccountId, no un String ambiguo.
+ */
 public record AccountId(String value) {
 
     public AccountId {

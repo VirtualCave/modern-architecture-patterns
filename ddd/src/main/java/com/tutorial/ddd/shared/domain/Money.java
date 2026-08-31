@@ -3,6 +3,18 @@ package com.tutorial.ddd.shared.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+/**
+ * VALUE OBJECT: Money
+ *
+ * Encapsula cantidad monetaria y moneda como una unidad indivisible.
+ * Inmutable: cada operación devuelve un NUEVO objeto Money.
+ *
+ * Por qué lanzar excepción en subtract() en lugar de devolver Optional:
+ *   En DDD, el dominio PROTEGE sus invariantes activamente.
+ *   Si intentas retirar más dinero del disponible, el dominio lo rechaza de inmediato.
+ *   Esto hace imposible que el sistema quede en un estado inconsistente.
+ *   Es una decisión de diseño consciente: mejor fallar rápido que permitir un saldo negativo.
+ */
 public record Money(BigDecimal amount, String currency) {
 
     public Money {

@@ -36,8 +36,8 @@ Cada contexto sigue la misma estructura: `domain -> application -> infrastructur
 - **Domain Events**: `account/domain/event/AccountEvent`
   - Representan hechos del negocio (cuenta abierta, dinero depositado, etc.).
 - **Application Services**:
-  - `AccountApplicationService`
-  - `CustomerApplicationService`
+  - `AccountApplicationService` — recibe `OpenAccountInput`, `DepositMoneyInput`, `TransferMoneyInput`
+  - `CustomerApplicationService` — recibe `CreateCustomerInput`
 - **Repositories**:
   - Interfaces en `domain/repository`
   - Implementaciones en `infrastructure/persistence`
@@ -212,25 +212,13 @@ stateDiagram-v2
     [*] --> ACTIVE: open()
     ACTIVE --> ACTIVE: deposit()
     ACTIVE --> ACTIVE: withdraw()
-    ACTIVE --> FROZEN: freeze()
-    ACTIVE --> CLOSED: close()
-    FROZEN --> ACTIVE: unfreeze()
-    FROZEN --> CLOSED: close()
-    CLOSED --> [*]
-    
+    ACTIVE --> ACTIVE: transferTo()
+
     note right of ACTIVE
-        Puede operar normalmente
-        Protege invariantes
-    end note
-    
-    note right of FROZEN
-        No permite operaciones
-        Solo puede reactivarse o cerrarse
-    end note
-    
-    note right of CLOSED
-        Estado final
-        No hay más operaciones
+        Estado inicial y único
+        Protege invariantes:
+        - No sobregiro
+        - No transferir a la misma cuenta
     end note
 ```
 
