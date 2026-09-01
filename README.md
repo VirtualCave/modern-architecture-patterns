@@ -199,9 +199,6 @@ La idea no es "poner dos carpetas diferentes", sino aceptar que leer y escribir 
 - Al escribir, importan reglas, validación e invariantes.
 - Al leer, importan rapidez, filtros y formatos de consulta.
 
-> **Nota**: CQRS usa conceptos de DDD como write model rico, factory methods y value objects.
-> Si este es tu primer contacto, conviene leer el módulo `ddd/` antes de este.
-
 ### Lo que suele costar entender
 
 1. **Command no devuelve datos de lectura**

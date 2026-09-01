@@ -14,8 +14,6 @@
 - [Diagnóstico rápido general](#diagnóstico-rápido-general)
 - [Resumen](#resumen)
 
-> **Nota**: Para los antipatrones de diseño (Anemic Domain Model, Leaking Abstraction, Primitive Obsession, etc.) consulta el fichero `ANTI_PATRONES.md` de esta misma carpeta.
-
 ## Poner lógica de negocio en el controlador
 
 ### Síntomas
@@ -146,9 +144,6 @@ public class OrderService {
     }
 }
 ```
-
-> **Nota**: En módulos que usan domain events (como `ddd` o `hybrid`), además del save hay que publicar los eventos acumulados. Ver el módulo `hybrid` para un ejemplo completo.
-
 
 ---
 
@@ -603,8 +598,6 @@ void shouldGenerateEventWhenAccountOpened() {
     assertThat(events.getFirst()).isInstanceOf(AccountEvent.AccountOpened.class);
 }
 ```
-
-> **Nota**: El módulo `hexagonal` no usa domain events. Ver `hybrid` para un ejemplo de combinación completa.
 
 ### Probar aggregates sin Spring
 

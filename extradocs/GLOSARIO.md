@@ -1,4 +1,4 @@
-# Glosario de Conceptos
+# Glosario de conceptos para arquitecturas modernas
 
 ## Índice de contenidos
 
