@@ -1,15 +1,5 @@
 # Tutorial de Arquitecturas Modernas: Hexagonal, CQRS, DDD y Hybrid
 
-## Índice de contenidos
-
-- [Hexagonal Architecture](#hexagonal-architecture)
-- [DDD](#ddd)
-- [CQRS](#cqrs)
-- [Cuándo mezclar arquitecturas](#cuándo-mezclar-arquitecturas)
-- [Regla práctica para elegir](#regla-práctica-para-elegir)
-- [APIs de ejemplo](#apis-de-ejemplo)
-- [Diagramas de Arquitectura](#diagramas-de-arquitectura)
-
 > **Orden de lectura recomendado:** Hexagonal → DDD → CQRS → Hybrid
 >
 > CQRS utiliza conceptos de DDD (write model rico, factory methods, value objects).
@@ -48,30 +38,12 @@ El dominio no debería saber si la app usa REST, colas, JPA, MongoDB o Kafka. Pa
 
 ### Flujo visual
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart TD
-    A[HTTP request] --> B[OrderController]
-    B --> C[Input Port<br/>CreateOrderUseCase / GetOrderUseCase / UpdateOrderStatusUseCase]
-    C --> D[Application Service]
-    D --> E[Order<br/>Aggregate Root]
-    E --> F[Output Port<br/>OrderRepository / OrderEventPublisher]
-    F --> G[Adapter de infraestructura<br/>JPA / Log]
+![Flujo de arquitectura hexagonal desde una petición HTTP por los puertos y el dominio hasta un adaptador de infraestructura](images/hexagonal-flow.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-
-    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-
-    class A,B entry;
-    class C,F port;
-    class D app;
-    class E domain;
-    class G infra;
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Nodos</strong></p><ul><li><strong>A</strong> — HTTP request</li><li><strong>B</strong> — OrderController</li><li><strong>C</strong> — Input Port / CreateOrderUseCase / GetOrderUseCase / / UpdateOrderStatusUseCase</li><li><strong>D</strong> — Application Service</li><li><strong>E</strong> — Order / Aggregate Root</li><li><strong>F</strong> — Output Port / OrderRepository / OrderEventPublisher</li><li><strong>G</strong> — Adapter de infraestructura / JPA / Log</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>A</strong> (HTTP request) → <strong>B</strong> (OrderController)</li><li><strong>B</strong> (OrderController) → <strong>C</strong> (Input Port / CreateOrderUseCase / GetOrderUseCase / / UpdateOrderStatusUseCase)</li><li><strong>C</strong> (Input Port / CreateOrderUseCase / GetOrderUseCase / / UpdateOrderStatusUseCase) → <strong>D</strong> (Application Service)</li><li><strong>D</strong> (Application Service) → <strong>E</strong> (Order / Aggregate Root)</li><li><strong>E</strong> (Order / Aggregate Root) → <strong>F</strong> (Output Port / OrderRepository / OrderEventPublisher)</li><li><strong>F</strong> (Output Port / OrderRepository / OrderEventPublisher) → <strong>G</strong> (Adapter de infraestructura / JPA / Log)</li></ul>
+</details>
 
 ### Pros
 
@@ -136,29 +108,12 @@ En lugar de pensar primero en tablas o endpoints, se piensa en:
 
 ### Flujo visual
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart TD
-    A[HTTP request] --> B[Controller]
-    B --> C[Application Service]
-    C --> D[Aggregate Root / Domain Service]
-    D --> E[Repository de dominio]
-    E --> F[Persistencia JPA]
+![Flujo DDD desde una petición HTTP por el controlador y el servicio de aplicación hasta el repositorio de dominio y la persistencia JPA](images/ddd-flow.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-
-    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-
-    class A,B entry;
-    class C app;
-    class D domain;
-    class E port;
-    class F infra;
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Nodos</strong></p><ul><li><strong>A</strong> — HTTP request</li><li><strong>B</strong> — Controller</li><li><strong>C</strong> — Application Service</li><li><strong>D</strong> — Aggregate Root / Domain Service</li><li><strong>E</strong> — Repository de dominio</li><li><strong>F</strong> — Persistencia JPA</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>A</strong> (HTTP request) → <strong>B</strong> (Controller)</li><li><strong>B</strong> (Controller) → <strong>C</strong> (Application Service)</li><li><strong>C</strong> (Application Service) → <strong>D</strong> (Aggregate Root / Domain Service)</li><li><strong>D</strong> (Aggregate Root / Domain Service) → <strong>E</strong> (Repository de dominio)</li><li><strong>E</strong> (Repository de dominio) → <strong>F</strong> (Persistencia JPA)</li></ul>
+</details>
 
 ### Pros
 
@@ -219,43 +174,12 @@ La idea no es "poner dos carpetas diferentes", sino aceptar que leer y escribir 
 
 ### Flujo visual
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart LR
-    subgraph COMMAND[COMMAND - Escritura]
-        C1[HTTP POST/PATCH/DELETE] --> C2[ProductCommandController]
-        C2 --> C3[CommandBus]
-        C3 --> C4[CommandHandler específico]
-        C4 --> C5[Write model: Product]
-        C5 --> C6[ProductWriteRepositoryAdapter]
-        C6 --> C7[JPA / BD]
-    end
+![Flujo CQRS con cadenas separadas de comandos y consultas desde el transporte HTTP hasta los adaptadores de base de datos de escritura y lectura](images/cqrs-flow.webp)
 
-    subgraph QUERY[QUERY - Lectura]
-        Q1[HTTP GET] --> Q2[ProductQueryController]
-        Q2 --> Q3[QueryBus]
-        Q3 --> Q4[QueryHandler específico]
-        Q4 --> Q5[Read model: ProductView]
-        Q5 --> Q6[ProductReadRepositoryAdapter]
-        Q6 --> Q7[JPA / BD]
-    end
-
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-
-    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
-    classDef bus fill:#E0E7FF,stroke:#3730A3,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef read fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-
-    class C1,C2,Q1,Q2 entry;
-    class C3,Q3 bus;
-    class C4,Q4 app;
-    class C5 domain;
-    class Q5 read;
-    class C6,C7,Q6,Q7 infra;
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Grupos</strong></p><ul><li>COMMAND - Escritura</li><li>QUERY - Lectura</li></ul><p><strong>Nodos</strong></p><ul><li><strong>C1</strong> — HTTP POST/PATCH/DELETE</li><li><strong>C2</strong> — ProductCommandController</li><li><strong>C3</strong> — CommandBus</li><li><strong>C4</strong> — CommandHandler específico</li><li><strong>C5</strong> — Write model: Product</li><li><strong>C6</strong> — ProductWriteRepositoryAdapter</li><li><strong>C7</strong> — JPA / BD</li><li><strong>Q1</strong> — HTTP GET</li><li><strong>Q2</strong> — ProductQueryController</li><li><strong>Q3</strong> — QueryBus</li><li><strong>Q4</strong> — QueryHandler específico</li><li><strong>Q5</strong> — Read model: ProductView</li><li><strong>Q6</strong> — ProductReadRepositoryAdapter</li><li><strong>Q7</strong> — JPA / BD</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>C1</strong> (HTTP POST/PATCH/DELETE) → <strong>C2</strong> (ProductCommandController)</li><li><strong>C2</strong> (ProductCommandController) → <strong>C3</strong> (CommandBus)</li><li><strong>C3</strong> (CommandBus) → <strong>C4</strong> (CommandHandler específico)</li><li><strong>C4</strong> (CommandHandler específico) → <strong>C5</strong> (Write model: Product)</li><li><strong>C5</strong> (Write model: Product) → <strong>C6</strong> (ProductWriteRepositoryAdapter)</li><li><strong>C6</strong> (ProductWriteRepositoryAdapter) → <strong>C7</strong> (JPA / BD)</li><li><strong>Q1</strong> (HTTP GET) → <strong>Q2</strong> (ProductQueryController)</li><li><strong>Q2</strong> (ProductQueryController) → <strong>Q3</strong> (QueryBus)</li><li><strong>Q3</strong> (QueryBus) → <strong>Q4</strong> (QueryHandler específico)</li><li><strong>Q4</strong> (QueryHandler específico) → <strong>Q5</strong> (Read model: ProductView)</li><li><strong>Q5</strong> (Read model: ProductView) → <strong>Q6</strong> (ProductReadRepositoryAdapter)</li><li><strong>Q6</strong> (ProductReadRepositoryAdapter) → <strong>Q7</strong> (JPA / BD)</li></ul>
+</details>
 
 ### Pros
 
@@ -451,193 +375,51 @@ curl http://localhost:8084/api/queries/subscriptions
 
 ### Arquitectura Hexagonal - Componentes
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-graph TB
-    subgraph "Entry Layer"
-        REST[REST Controller]
-        CLI[CLI Adapter]
-        MQ[Message Queue Adapter]
-    end
-    
-    subgraph "Application Layer"
-        InputPorts[Input Ports<br/>Use Cases]
-        AppServices[Application Services]
-    end
-    
-    subgraph "Domain Layer"
-        Aggregates[Aggregates<br/>Order, Customer]
-        VOs[Value Objects<br/>Money, OrderId]
-        OutputPorts[Output Ports<br/>Repositories, Event Publishers]
-    end
-    
-    subgraph "Infrastructure Layer"
-        JPA[JPA Adapter]
-        EventPublisher[Event Publisher Adapter]
-        Log[Logging Adapter]
-    end
-    
-    REST --> InputPorts
-    CLI --> InputPorts
-    MQ --> InputPorts
-    InputPorts --> AppServices
-    AppServices --> Aggregates
-    AppServices --> OutputPorts
-    Aggregates --> OutputPorts
-    OutputPorts --> JPA
-    OutputPorts --> EventPublisher
-    OutputPorts --> Log
+![Capas de arquitectura hexagonal que conectan adaptadores de entrada, servicios de aplicación, componentes de dominio y adaptadores de infraestructura](images/hexagonal-layers.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-    
-    classDef entry fill:#DBEAFE,stroke:#1D4ED8,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-    
-    class REST,CLI,MQ entry
-    class InputPorts,AppServices app
-    class Aggregates,VOs,OutputPorts domain
-    class JPA,EventPublisher,Log infra
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Grupos</strong></p><ul><li>Entry Layer</li><li>Application Layer</li><li>Domain Layer</li><li>Infrastructure Layer</li></ul><p><strong>Nodos</strong></p><ul><li><strong>REST</strong> — REST Controller</li><li><strong>CLI</strong> — CLI Adapter</li><li><strong>MQ</strong> — Message Queue Adapter</li><li><strong>InputPorts</strong> — Input Ports / Use Cases</li><li><strong>AppServices</strong> — Application Services</li><li><strong>Aggregates</strong> — Aggregates / Order, Customer</li><li><strong>VOs</strong> — Value Objects / Money, OrderId</li><li><strong>OutputPorts</strong> — Output Ports / Repositories, Event Publishers</li><li><strong>JPA</strong> — JPA Adapter</li><li><strong>EventPublisher</strong> — Event Publisher Adapter</li><li><strong>Log</strong> — Logging Adapter</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>REST</strong> (REST Controller) → <strong>InputPorts</strong> (Input Ports / Use Cases)</li><li><strong>CLI</strong> (CLI Adapter) → <strong>InputPorts</strong> (Input Ports / Use Cases)</li><li><strong>MQ</strong> (Message Queue Adapter) → <strong>InputPorts</strong> (Input Ports / Use Cases)</li><li><strong>InputPorts</strong> (Input Ports / Use Cases) → <strong>AppServices</strong> (Application Services)</li><li><strong>AppServices</strong> (Application Services) → <strong>Aggregates</strong> (Aggregates / Order, Customer)</li><li><strong>AppServices</strong> (Application Services) → <strong>OutputPorts</strong> (Output Ports / Repositories, Event Publishers)</li><li><strong>Aggregates</strong> (Aggregates / Order, Customer) → <strong>OutputPorts</strong> (Output Ports / Repositories, Event Publishers)</li><li><strong>OutputPorts</strong> (Output Ports / Repositories, Event Publishers) → <strong>JPA</strong> (JPA Adapter)</li><li><strong>OutputPorts</strong> (Output Ports / Repositories, Event Publishers) → <strong>EventPublisher</strong> (Event Publisher Adapter)</li><li><strong>OutputPorts</strong> (Output Ports / Repositories, Event Publishers) → <strong>Log</strong> (Logging Adapter)</li></ul>
+</details>
 
 ### Arquitectura CQRS - Componentes
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-graph TB
-    subgraph "Command Side"
-        CController[Command Controller]
-        CBus[Command Bus]
-        CHandlers[Command Handlers]
-        WModel[Write Model<br/>Product]
-        WRepo[Write Repository]
-    end
-    
-    subgraph "Query Side"
-        QController[Query Controller]
-        QBus[Query Bus]
-        QHandlers[Query Handlers]
-        RModel[Read Model<br/>ProductView]
-        RRepo[Read Repository]
-    end
-    
-    subgraph "Database"
-        WDB[Write DB<br/>Products Table]
-        RDB[Read DB<br/>ProductViews Table]
-    end
-    
-    CController --> CBus
-    CBus --> CHandlers
-    CHandlers --> WModel
-    CHandlers --> WRepo
-    WRepo --> WDB
-    
-    QController --> QBus
-    QBus --> QHandlers
-    QHandlers --> RModel
-    QHandlers --> RRepo
-    RRepo --> RDB
+![Componentes CQRS separados en lado de comandos, lado de consultas y sus bases de datos de escritura y lectura](images/cqrs-components.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-    
-    classDef command fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef query fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
-    classDef db fill:#E5E7EB,stroke:#4B5563,stroke-width:1px,color:#111827;
-    
-    class CController,CBus,CHandlers,WModel,WRepo command
-    class QController,QBus,QHandlers,RModel,RRepo query
-    class WDB,RDB db
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Grupos</strong></p><ul><li>Command Side</li><li>Query Side</li><li>Database</li></ul><p><strong>Nodos</strong></p><ul><li><strong>CController</strong> — Command Controller</li><li><strong>CBus</strong> — Command Bus</li><li><strong>CHandlers</strong> — Command Handlers</li><li><strong>WModel</strong> — Write Model / Product</li><li><strong>WRepo</strong> — Write Repository</li><li><strong>QController</strong> — Query Controller</li><li><strong>QBus</strong> — Query Bus</li><li><strong>QHandlers</strong> — Query Handlers</li><li><strong>RModel</strong> — Read Model / ProductView</li><li><strong>RRepo</strong> — Read Repository</li><li><strong>WDB</strong> — Write DB / Products Table</li><li><strong>RDB</strong> — Read DB / ProductViews Table</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>CController</strong> (Command Controller) → <strong>CBus</strong> (Command Bus)</li><li><strong>CBus</strong> (Command Bus) → <strong>CHandlers</strong> (Command Handlers)</li><li><strong>CHandlers</strong> (Command Handlers) → <strong>WModel</strong> (Write Model / Product)</li><li><strong>CHandlers</strong> (Command Handlers) → <strong>WRepo</strong> (Write Repository)</li><li><strong>WRepo</strong> (Write Repository) → <strong>WDB</strong> (Write DB / Products Table)</li><li><strong>QController</strong> (Query Controller) → <strong>QBus</strong> (Query Bus)</li><li><strong>QBus</strong> (Query Bus) → <strong>QHandlers</strong> (Query Handlers)</li><li><strong>QHandlers</strong> (Query Handlers) → <strong>RModel</strong> (Read Model / ProductView)</li><li><strong>QHandlers</strong> (Query Handlers) → <strong>RRepo</strong> (Read Repository)</li><li><strong>RRepo</strong> (Read Repository) → <strong>RDB</strong> (Read DB / ProductViews Table)</li></ul>
+</details>
 
 ### Comparativa de Arquitecturas
 
-| Aspecto | Hexagonal | CQRS | DDD | Hybrid |
-|---------|-----------|------|-----|--------|
-| **Enfoque principal** | Aislamiento del dominio | Separación lectura/escritura | Lenguaje del negocio | Combinación de las tres |
-| **Complejidad** | Media | Media-Alta | Alta | Muy alta |
-| **Curva de aprendizaje** | Moderada | Moderada | Alta | Muy alta |
-| **Ideal para** | Dominios con infraestructura variable | Sistemas con muchas lecturas | Dominios complejos | Sistemas serios y evolutivos |
-| **No ideal para** | CRUDs simples | CRUDs simples | Dominios simples | Prototipos |
-| **Componentes clave** | Ports, Adapters, Aggregates | Commands, Queries, Buses | Bounded Contexts, Ubiquitous Language | Todo lo anterior |
-| **Testing** | Fácil (dominio aislado) | Fácil (separado) | Fácil (dominio rico) | Fácil pero verboso |
-| **Escalabilidad** | Buena | Muy buena (lectura) | Buena | Excelente |
+![Tabla comparativa de las arquitecturas Hexagonal, CQRS, DDD e Hybrid](images/tabla-comparativa-arquitecturas.webp)
+
+<details>
+<summary>Tabla comparativa accesible</summary>
+<table>
+<thead><tr><th scope="col">Aspecto</th><th scope="col">Hexagonal</th><th scope="col">CQRS</th><th scope="col">DDD</th><th scope="col">Hybrid</th></tr></thead>
+<tbody><tr><td>Enfoque principal</td><td>Aislamiento del dominio</td><td>Separación lectura/escritura</td><td>Lenguaje del negocio</td><td>Combinación de las tres</td></tr><tr><td>Complejidad</td><td>Media</td><td>Media-Alta</td><td>Alta</td><td>Muy alta</td></tr><tr><td>Curva de aprendizaje</td><td>Moderada</td><td>Moderada</td><td>Alta</td><td>Muy alta</td></tr><tr><td>Ideal para</td><td>Dominios con infraestructura variable</td><td>Sistemas con muchas lecturas</td><td>Dominios complejos</td><td>Sistemas serios y evolutivos</td></tr><tr><td>No ideal para</td><td>CRUDs simples</td><td>CRUDs simples</td><td>Dominios simples</td><td>Prototipos</td></tr><tr><td>Componentes clave</td><td>Ports, Adapters, Aggregates</td><td>Commands, Queries, Buses</td><td>Bounded Contexts, Ubiquitous Language</td><td>Todo lo anterior</td></tr><tr><td>Testing</td><td>Fácil (dominio aislado)</td><td>Fácil (separado)</td><td>Fácil (dominio rico)</td><td>Fácil pero verboso</td></tr><tr><td>Escalabilidad</td><td>Buena</td><td>Muy buena (lectura)</td><td>Buena</td><td>Excelente</td></tr></tbody>
+</table>
+</details>
 
 ### Diagrama de Decisión
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart TD
-    A[El sistema es simple?] -->|Si| B[CRUD clasico]
-    A -->|No| C[La infraestructura cambiara?]
-    
-    C -->|Si| D[Hexagonal]
-    C -->|No| E[Lectura y escritura son distintas?]
-    
-    E -->|Si| F[CQRS]
-    E -->|No| G[El dominio es complejo?]
-    
-    G -->|Si| H[DDD]
-    G -->|No| I[Arquitectura en capas]
-    
-    D --> J[Tambien necesita CQRS?]
-    J -->|Si| K[Hexagonal + CQRS]
-    J -->|No| L[Hexagonal solo]
-    
-    F --> M[Tambien necesita DDD?]
-    M -->|Si| N[DDD + CQRS]
-    M -->|No| O[CQRS solo]
-    
-    H --> P[Tambien necesita Hexagonal?]
-    P -->|Si| Q[Hexagonal + DDD]
-    P -->|No| R[DDD solo]
-    
-    K --> S[Tambien necesita DDD?]
-    N --> S
-    Q --> S
-    S -->|Si| T[Hybrid<br/>Hexagonal + CQRS + DDD]
-    S -->|No| U[Combinación parcial]
+![Árbol de decisión arquitectónica desde la simplicidad del sistema por infraestructura, separación de lectura y escritura, complejidad del dominio y combinaciones híbridas](images/architecture-decision.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-    
-    classDef simple fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef medium fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef complex fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-    classDef hybrid fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
-    
-    class B,I simple
-    class D,F,H medium
-    class K,N,Q complex
-    class T,U hybrid
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Nodos</strong></p><ul><li><strong>A</strong> — ¿El sistema es simple?</li><li><strong>B</strong> — CRUD clásico</li><li><strong>C</strong> — ¿La infraestructura cambiará?</li><li><strong>D</strong> — Hexagonal</li><li><strong>E</strong> — ¿Lectura y escritura son distintas?</li><li><strong>F</strong> — CQRS</li><li><strong>G</strong> — ¿El dominio es complejo?</li><li><strong>H</strong> — DDD</li><li><strong>I</strong> — Arquitectura en capas</li><li><strong>J</strong> — ¿También necesita CQRS?</li><li><strong>K</strong> — Hexagonal + CQRS</li><li><strong>L</strong> — Hexagonal solo</li><li><strong>M</strong> — ¿También necesita DDD?</li><li><strong>N</strong> — DDD + CQRS</li><li><strong>O</strong> — CQRS solo</li><li><strong>P</strong> — ¿También necesita Hexagonal?</li><li><strong>Q</strong> — Hexagonal + DDD</li><li><strong>R</strong> — DDD solo</li><li><strong>S</strong> — ¿También necesita DDD?</li><li><strong>T</strong> — Híbrido / Hexagonal + CQRS + DDD</li><li><strong>U</strong> — Combinación parcial</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>A</strong> (¿El sistema es simple?) → <strong>B</strong> (CRUD clásico) — Sí</li><li><strong>A</strong> (¿El sistema es simple?) → <strong>C</strong> (¿La infraestructura cambiará?) — No</li><li><strong>C</strong> (¿La infraestructura cambiará?) → <strong>D</strong> (Hexagonal) — Sí</li><li><strong>C</strong> (¿La infraestructura cambiará?) → <strong>E</strong> (¿Lectura y escritura son distintas?) — No</li><li><strong>E</strong> (¿Lectura y escritura son distintas?) → <strong>F</strong> (CQRS) — Sí</li><li><strong>E</strong> (¿Lectura y escritura son distintas?) → <strong>G</strong> (¿El dominio es complejo?) — No</li><li><strong>G</strong> (¿El dominio es complejo?) → <strong>H</strong> (DDD) — Sí</li><li><strong>G</strong> (¿El dominio es complejo?) → <strong>I</strong> (Arquitectura en capas) — No</li><li><strong>D</strong> (Hexagonal) → <strong>J</strong> (¿También necesita CQRS?)</li><li><strong>J</strong> (¿También necesita CQRS?) → <strong>K</strong> (Hexagonal + CQRS) — Sí</li><li><strong>J</strong> (¿También necesita CQRS?) → <strong>L</strong> (Hexagonal solo) — No</li><li><strong>F</strong> (CQRS) → <strong>M</strong> (¿También necesita DDD?)</li><li><strong>M</strong> (¿También necesita DDD?) → <strong>N</strong> (DDD + CQRS) — Sí</li><li><strong>M</strong> (¿También necesita DDD?) → <strong>O</strong> (CQRS solo) — No</li><li><strong>H</strong> (DDD) → <strong>P</strong> (¿También necesita Hexagonal?)</li><li><strong>P</strong> (¿También necesita Hexagonal?) → <strong>Q</strong> (Hexagonal + DDD) — Sí</li><li><strong>P</strong> (¿También necesita Hexagonal?) → <strong>R</strong> (DDD solo) — No</li><li><strong>K</strong> (Hexagonal + CQRS) → <strong>S</strong> (¿También necesita DDD?)</li><li><strong>N</strong> (DDD + CQRS) → <strong>S</strong> (¿También necesita DDD?)</li><li><strong>Q</strong> (Hexagonal + DDD) → <strong>S</strong> (¿También necesita DDD?)</li><li><strong>S</strong> (¿También necesita DDD?) → <strong>T</strong> (Híbrido / Hexagonal + CQRS + DDD) — Sí</li><li><strong>S</strong> (¿También necesita DDD?) → <strong>U</strong> (Combinación parcial) — No</li></ul>
+</details>
 
 ### Diagrama visual de la mezcla
 
-```mermaid
-%%{init: {'theme':'base','themeVariables': {'background':'transparent','primaryTextColor':'#111827','lineColor':'#94A3B8'}}}%%
-flowchart TD
-    A[DDD<br/>negocio + reglas + bounded contexts] -->|modela el dominio| B[Hexagonal<br/>puertos + adaptadores + aislamiento técnico]
-    B -->|expone casos de uso| C[CQRS - Commands<br/>escribir / cambiar]
-    B -->|expone casos de uso| D[CQRS - Queries<br/>leer / consultar]
-    C --> E[Write Model<br/>reglas de negocio]
-    D --> F[Read Model<br/>vistas optimizadas]
-    E --> G[Infraestructura<br/>REST / JPA / H2]
-    F --> G
+![Arquitectura híbrida donde DDD modela el dominio, los puertos hexagonales exponen casos de uso, CQRS separa comandos y consultas y ambos usan la infraestructura](images/architecture-hybrid.webp)
 
-    linkStyle default stroke:#94A3B8,stroke-width:2px;
-
-    classDef domain fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827;
-    classDef port fill:#F3E8FF,stroke:#7E22CE,stroke-width:1px,color:#111827;
-    classDef app fill:#DCFCE7,stroke:#15803D,stroke-width:1px,color:#111827;
-    classDef read fill:#CCFBF1,stroke:#0F766E,stroke-width:1px,color:#111827;
-    classDef infra fill:#FFEDD5,stroke:#C2410C,stroke-width:1px,color:#111827;
-
-    class A,E domain;
-    class B port;
-    class C app;
-    class D,F read;
-    class G infra;
-```
+<details>
+<summary>Datos accesibles del diagrama</summary>
+<p><strong>Nodos</strong></p><ul><li><strong>A</strong> — DDD / negocio + reglas + bounded contexts</li><li><strong>B</strong> — Hexagonal / puertos + adaptadores + aislamiento técnico</li><li><strong>C</strong> — CQRS - Commands / escribir / cambiar</li><li><strong>D</strong> — CQRS - Queries / leer / consultar</li><li><strong>E</strong> — Write Model / reglas de negocio</li><li><strong>F</strong> — Read Model / vistas optimizadas</li><li><strong>G</strong> — Infraestructura / REST / JPA / H2</li></ul><p><strong>Conexiones</strong></p><ul><li><strong>A</strong> (DDD / negocio + reglas + bounded contexts) → <strong>B</strong> (Hexagonal / puertos + adaptadores + aislamiento técnico) — modela el dominio</li><li><strong>B</strong> (Hexagonal / puertos + adaptadores + aislamiento técnico) → <strong>C</strong> (CQRS - Commands / escribir / cambiar) — expone casos de uso</li><li><strong>B</strong> (Hexagonal / puertos + adaptadores + aislamiento técnico) → <strong>D</strong> (CQRS - Queries / leer / consultar) — expone casos de uso</li><li><strong>C</strong> (CQRS - Commands / escribir / cambiar) → <strong>E</strong> (Write Model / reglas de negocio)</li><li><strong>D</strong> (CQRS - Queries / leer / consultar) → <strong>F</strong> (Read Model / vistas optimizadas)</li><li><strong>E</strong> (Write Model / reglas de negocio) → <strong>G</strong> (Infraestructura / REST / JPA / H2)</li><li><strong>F</strong> (Read Model / vistas optimizadas) → <strong>G</strong> (Infraestructura / REST / JPA / H2)</li></ul>
+</details>
 
 
 
